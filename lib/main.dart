@@ -1,22 +1,31 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart'; 
+import 'core/app_theme.dart';
+import 'core/app_routes.dart';
 
-void main() {
+void main() async {
+  // Required for initializing Firebase, Location, or other native services later
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(const JomMasjidApp());
 }
 
 class JomMasjidApp extends StatelessWidget {
-  const JomMasjidApp({super.key}); // FIXED: Super parameter
+  const JomMasjidApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'JomMasjid',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-      ),
-      home: const HomeScreen(), 
       debugShowCheckedModeBanner: false,
+      
+      // Professional Theme Management
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme, // Automatically adapts if user's phone is in Dark Mode
+      themeMode: ThemeMode.system, 
+      
+      // Professional Route Management
+      initialRoute: AppRoutes.homeRoute,
+      routes: AppRoutes.getRoutes(),
     );
   }
 }
