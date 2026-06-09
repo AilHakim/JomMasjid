@@ -4,13 +4,13 @@ class CustomButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
 
-  const CustomButton({Key? key, required this.text, required this.onPressed}) : super(key: key);
+  const CustomButton({super.key, required this.text, required this.onPressed}); // FIXED: Super parameter
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green, // JomMasjid Theme Color
+        backgroundColor: Colors.green, 
         padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
       ),
       onPressed: onPressed,
