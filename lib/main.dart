@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'screens/donation_screen.dart';
-import 'screens/feed.dart';
-import 'screens/mosques.dart';
-import 'screens/learn.dart';
+//import 'screens/feed.dart';
+//import 'screens/mosques.dart';
+//import 'screens/learn.dart';
 //import 'core/app_theme.dart';
 //import 'core/app_routes.dart';
 
@@ -57,9 +57,7 @@ class _MasterScreenState extends State<MasterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Islamic Finance App'),
-      ),
+      
       // 4. THE BODY: Display the page from the list that matches the selected index
       body: _pages[_selectedIndex], 
       
