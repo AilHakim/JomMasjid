@@ -21,13 +21,13 @@ class Campaign {
   final int daysLeft;
   final String image;
   final String category;
-  final bool verified;
+  
   final List<CampaignTransaction> transactions;
 
   Campaign({
     required this.id, required this.mosque, required this.title, required this.description,
     required this.raised, required this.goal, required this.donors, required this.daysLeft,
-    required this.image, required this.category, required this.verified, required this.transactions,
+    required this.image, required this.category, required this.transactions,
   });
 }
 
@@ -44,7 +44,6 @@ final List<Campaign> campaigns = [
     daysLeft: 15,
     image: "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=600&q=80",
     category: "Infrastructure",
-    verified: true,
     transactions: [
       CampaignTransaction(name: "Structural Assessment", amount: 5000, date: "Jun 1", status: "completed"),
       CampaignTransaction(name: "Material Purchase", amount: 18000, date: "Jun 5", status: "completed"),
@@ -62,7 +61,6 @@ final List<Campaign> campaigns = [
     daysLeft: 30,
     image: "https://images.unsplash.com/photo-1542931287-023b922fa89b?w=600&q=80",
     category: "Facilities",
-    verified: true,
     transactions: [
       CampaignTransaction(name: "System Quote & Planning", amount: 1500, date: "Jun 2", status: "completed"),
       CampaignTransaction(name: "Equipment Order", amount: 15000, date: "Jun 15", status: "pending"),
@@ -119,9 +117,10 @@ class _DonationScreenState extends State<DonationScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // Summary Cards
-          Row(
+          //total raised and donors
+          Row( 
             children: [
+              //total raised
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(16),
@@ -142,6 +141,7 @@ class _DonationScreenState extends State<DonationScreen> {
                 ),
               ),
               const SizedBox(width: 12),
+              //total donors
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(16),
@@ -163,12 +163,12 @@ class _DonationScreenState extends State<DonationScreen> {
               ),
             ],
           ),
-          
           const SizedBox(height: 24),
+          
           const Text("Active Campaigns", style: TextStyle(color: Color(0xFF242424), fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
 
-          // Campaign List
+          // mosques that can be donated
           ...campaigns.map((campaign) => GestureDetector(
             onTap: () => setState(() => selectedCampaign = campaign),
             child: Container(
@@ -176,7 +176,7 @@ class _DonationScreenState extends State<DonationScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,21 +188,6 @@ class _DonationScreenState extends State<DonationScreen> {
                         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                         child: Image.network(campaign.image, height: 140, width: double.infinity, fit: BoxFit.cover),
                       ),
-                      if (campaign.verified)
-                        Positioned(
-                          top: 12, right: 12,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(color: const Color(0xFF4EC67C), borderRadius: BorderRadius.circular(12)),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.check_circle, color: Colors.white, size: 12),
-                                SizedBox(width: 4),
-                                Text("Verified", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                          ),
-                        ),
                     ],
                   ),
                   // Details
@@ -210,18 +195,17 @@ class _DonationScreenState extends State<DonationScreen> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      //Title and Mosque name
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(child: Text(campaign.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
-                            const Icon(Icons.arrow_outward, color: Color(0xFFC67C4E), size: 20),
-                          ],
+                        Text(
+                          campaign.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                         ),
-                        Text(campaign.mosque, style: const TextStyle(color: Color(0xFF909090), fontSize: 12)),
+                        Text(
+                          campaign.mosque, style: const TextStyle(color: Color(0xFF909090), fontSize: 12),
+                        ),
                         const SizedBox(height: 16),
                         
-                        // Progress
+                        // current raised and goal 
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -230,6 +214,7 @@ class _DonationScreenState extends State<DonationScreen> {
                           ],
                         ),
                         const SizedBox(height: 8),
+                        //progress line
                         LinearProgressIndicator(
                           value: campaign.raised / campaign.goal,
                           backgroundColor: const Color(0xFFF6EBE4),
@@ -237,13 +222,50 @@ class _DonationScreenState extends State<DonationScreen> {
                           minHeight: 8,
                           borderRadius: BorderRadius.circular(4),
                         ),
+                        const SizedBox(height: 12), 
+
+                        // Donors and Days Left
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Total Donors 
+                            Row(
+                              children: [
+                                const Icon(Icons.people_outline, color: Color(0xFF909090), size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "${campaign.donors} donors", style: const TextStyle(color: Color(0xFF909090), fontSize: 12)
+                                ),
+                              ],
+                            ),
+                            
+                            // Days Left
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF6EBE4), 
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.access_time, color: Color(0xFFC67C4E), size: 14),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    "${campaign.daysLeft}d left", style: const TextStyle(color: Color(0xFFC67C4E), fontSize: 12, fontWeight: FontWeight.bold
+                                    )
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   )
                 ],
               ),
             ),
-          )).toList(),
+          ))
         ],
       ),
     );
@@ -278,6 +300,7 @@ class _CampaignDetailState extends State<CampaignDetail> {
           Stack(
             children: [
               Image.network(widget.campaign.image, height: 250, width: double.infinity, fit: BoxFit.cover),
+              //back arrow
               Positioned(
                 top: 50, left: 20,
                 child: IconButton(
@@ -286,6 +309,7 @@ class _CampaignDetailState extends State<CampaignDetail> {
                   style: IconButton.styleFrom(backgroundColor: Colors.black45),
                 ),
               ),
+              //title on image
               Positioned(
                 bottom: 20, left: 20, right: 20,
                 child: Column(
@@ -299,7 +323,7 @@ class _CampaignDetailState extends State<CampaignDetail> {
             ],
           ),
 
-          // Scrollable Content
+          // Scrollable Content (except image)
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(20),
