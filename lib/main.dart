@@ -43,7 +43,7 @@ class _MasterScreenState extends State<MasterScreen> {
     const Center(child: Text('Mosques Page', style: TextStyle(fontSize: 24))),
     const Center(child: Text('Prayer Page', style: TextStyle(fontSize: 24))),
     const Center(child: Text('Events Page', style: TextStyle(fontSize: 24))),
-    const Center(child: Text('Learn Page', style: TextStyle(fontSize: 24))),
+    const LearnScreen(),
     const DonationScreen(),
   ];
 
