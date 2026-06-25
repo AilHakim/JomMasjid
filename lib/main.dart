@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart'; // NEW
+import 'firebase_options.dart'; // NEW
 import 'screens/donation_screen.dart';
-//import 'screens/feed.dart';
-//import 'screens/mosques.dart';
-//import 'screens/learn.dart';
-//import 'core/app_theme.dart';
-//import 'core/app_routes.dart';
+import 'screens/feed.dart';
+import 'screens/mosques.dart';
+import 'screens/learn.dart';
 
-void main() {
+
+void main() async {
+  // Ensure Flutter is fully loaded before launching Firebase
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Boot up Firebase using the auto-generated settings
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const JomMasjidApp());
 }
 

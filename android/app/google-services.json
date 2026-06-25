@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1038258745288",
+    "project_id": "jommasjid-app",
+    "storage_bucket": "jommasjid-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1038258745288:android:aaa6fd28e0f53fb5dcdafd",
+        "android_client_info": {
+          "package_name": "com.example.jom_masjid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9_bI6mzYC9IF7swSznEdimWeiqVZwWbI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
