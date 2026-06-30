@@ -57,9 +57,9 @@ class _MasterScreenState extends State<MasterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Islamic Finance App'),
-      ),
+      //appBar: AppBar(
+      //  title: const Text('Islamic Finance App'),
+      //),
       // 4. THE BODY: Display the page from the list that matches the selected index
       body: _pages[_selectedIndex], 
       

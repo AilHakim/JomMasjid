@@ -109,20 +109,11 @@ const List<Course> kCourses = [
     description:
         'Master the complete rulings and spiritual dimensions of Islamic prayer from wudu to salam.',
     videos: [
-      CourseVideo(
-          title: 'Introduction to Fiqh of Prayer',
-          duration: '12:30',
-          free: true),
-      CourseVideo(
-          title: 'Conditions of Valid Prayer', duration: '18:45', free: true),
-      CourseVideo(
-          title: 'Pillars of Prayer (Rukun Solat)',
-          duration: '22:10',
-          free: false),
-      CourseVideo(
-          title: 'Sunnah & Makruh in Prayer', duration: '20:00', free: false),
-      CourseVideo(
-          title: 'Common Mistakes in Prayer', duration: '15:30', free: false),
+      CourseVideo(title: 'Introduction to Fiqh of Prayer', duration: '12:30', free: true),
+      CourseVideo(title: 'Conditions of Valid Prayer', duration: '18:45', free: true),
+      CourseVideo(title: 'Pillars of Prayer (Rukun Solat)', duration: '22:10', free: false),
+      CourseVideo(title: 'Sunnah & Makruh in Prayer', duration: '20:00', free: false),
+      CourseVideo(title: 'Common Mistakes in Prayer', duration: '15:30', free: false),
     ],
   ),
   Course(
@@ -139,17 +130,14 @@ const List<Course> kCourses = [
     category: 'Quran',
     level: 'All Levels',
     image:
-        'https://images.unsplash.com/photo-1567878578-f24aa7e63e3f?w=600&q=80',
+        'https://images.unsplash.com/photo-1589462135796-2b46e4bdd7fe?q=80&w=686&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     description:
         'Learn the correct pronunciation rules of the Quran with certified Tajweed methodology.',
     videos: [
-      CourseVideo(
-          title: 'Introduction to Tajweed', duration: '10:00', free: true),
+      CourseVideo(title: 'Introduction to Tajweed', duration: '10:00', free: true),
       CourseVideo(title: 'Makharijul Huruf', duration: '25:00', free: false),
-      CourseVideo(
-          title: 'Rules of Nun Sakinah', duration: '20:00', free: false),
-      CourseVideo(
-          title: 'Rules of Meem Sakinah', duration: '18:00', free: false),
+      CourseVideo(title: 'Rules of Nun Sakinah', duration: '20:00', free: false),
+      CourseVideo(title: 'Rules of Meem Sakinah', duration: '18:00', free: false),
     ],
   ),
   Course(
@@ -166,7 +154,7 @@ const List<Course> kCourses = [
     category: 'Aqidah',
     level: 'Beginner',
     image:
-        'https://images.unsplash.com/photo-1542931287-023b922fa89b?w=600&q=80',
+        'https://images.unsplash.com/photo-1693590614566-1d3ea9ef32f7?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     description:
         'Strengthen your understanding of Islamic creed and the six pillars of faith.',
     videos: [
@@ -189,15 +177,13 @@ const List<Course> kCourses = [
     category: 'Seerah',
     level: 'All Levels',
     image:
-        'https://images.unsplash.com/photo-1588776814546-1ffbb2c3e0c9?w=600&q=80',
+        'https://images.unsplash.com/photo-1676928117296-66bc2882ec6a?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     description:
         'A comprehensive journey through the life, character, and legacy of Prophet Muhammad \uFDFA.',
     videos: [
-      CourseVideo(
-          title: 'Before the Prophethood', duration: '28:00', free: true),
+      CourseVideo(title: 'Before the Prophethood', duration: '28:00', free: true),
       CourseVideo(title: 'First Revelation', duration: '22:00', free: true),
-      CourseVideo(
-          title: 'Early Muslims in Makkah', duration: '25:00', free: true),
+      CourseVideo(title: 'Early Muslims in Makkah', duration: '25:00', free: true),
     ],
   ),
 ];
@@ -243,10 +229,27 @@ class LearnScreen extends StatefulWidget {
 
 class _LearnScreenState extends State<LearnScreen> {
   String _activeCategory = 'All';
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
-  List<Course> get _filtered => _activeCategory == 'All'
-      ? kCourses
-      : kCourses.where((c) => c.category == _activeCategory).toList();
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Course> get _filtered {
+    final query = _searchQuery.toLowerCase();
+    return kCourses.where((c) {
+      final matchesCategory =
+          _activeCategory == 'All' || c.category == _activeCategory;
+      final matchesSearch = query.isEmpty ||
+          c.title.toLowerCase().contains(query) ||
+          c.instructor.toLowerCase().contains(query) ||
+          c.mosque.toLowerCase().contains(query);
+      return matchesCategory && matchesSearch;
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -278,10 +281,8 @@ class _LearnScreenState extends State<LearnScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Search bar (visual, matches original)
+                // Search bar
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -293,19 +294,36 @@ class _LearnScreenState extends State<LearnScreen> {
                       ),
                     ],
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.search,
-                          size: 16, color: AppColors.textGray),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Search classes...',
-                        style: GoogleFonts.urbanist(
-                          fontSize: 14,
-                          color: AppColors.textGray,
-                        ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) =>
+                        setState(() => _searchQuery = value),
+                    style: GoogleFonts.urbanist(
+                      fontSize: 14,
+                      color: AppColors.textDark,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Search classes...',
+                      hintStyle: GoogleFonts.urbanist(
+                        fontSize: 14,
+                        color: AppColors.textGray,
                       ),
-                    ],
+                      prefixIcon: const Icon(Icons.search,
+                          size: 16, color: AppColors.textGray),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear,
+                                  size: 16, color: AppColors.textGray),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _searchQuery = '');
+                              },
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                    ),
                   ),
                 ),
               ],
@@ -345,61 +363,68 @@ class _LearnScreenState extends State<LearnScreen> {
   }
 
   Widget _buildFeaturedBanner() {
+    final featuredCourse = kCourses[3]; // Seerah: Life of the Prophet
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: SizedBox(
-          height: 144,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              _coverImage(
-                  'https://images.unsplash.com/photo-1585036156171-384164a8c675?w=600&q=80'),
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [Color(0xE6242424), Colors.transparent],
+      child: GestureDetector(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => CourseDetailScreen(course: featuredCourse),
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: SizedBox(
+            height: 144,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _coverImage(featuredCourse.image),
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [Color(0xE6242424), Colors.transparent],
+                    ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '\u2605 TOP RATED',
-                      style: GoogleFonts.urbanist(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '\u2605 TOP RATED',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Seerah: Life of the Prophet \uFDFA',
-                      style: GoogleFonts.sora(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                      const SizedBox(height: 4),
+                      Text(
+                        'Seerah: Life of the Prophet \uFDFA',
+                        style: GoogleFonts.sora(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'FREE \u00B7 52 lessons \u00B7 2,100 students',
-                      style: GoogleFonts.urbanist(
-                        fontSize: 12,
-                        color: Colors.white70,
+                      const SizedBox(height: 2),
+                      Text(
+                        'FREE \u00B7 52 lessons',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -557,7 +582,7 @@ class _CourseCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'by ${course.instructor} \u00B7 ${course.mosque}',
+                    'by ${course.instructor}',
                     style: GoogleFonts.urbanist(
                       fontSize: 12,
                       color: AppColors.textGray,
@@ -574,12 +599,6 @@ class _CourseCard extends StatelessWidget {
                             iconColor: AppColors.gold,
                             text: course.rating.toString(),
                             bold: true,
-                          ),
-                          const SizedBox(width: 12),
-                          _miniStat(
-                            icon: Icons.people_outline,
-                            iconColor: AppColors.textGray,
-                            text: formatNumber(course.students),
                           ),
                           const SizedBox(width: 12),
                           _miniStat(
@@ -749,8 +768,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       _detailStat(Icons.star, AppColors.gold,
                           course.rating.toString(),
                           bold: true, fill: true),
-                      _detailStat(Icons.people_outline, AppColors.textGray,
-                          '${formatNumber(course.students)} students'),
                       _detailStat(Icons.access_time, AppColors.textGray,
                           course.duration),
                       _detailStat(Icons.menu_book_outlined,
@@ -788,13 +805,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.textDark,
-                              ),
-                            ),
-                            Text(
-                              course.mosque,
-                              style: GoogleFonts.urbanist(
-                                fontSize: 12,
-                                color: AppColors.textGray,
                               ),
                             ),
                           ],
@@ -864,7 +874,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   Widget _videoTile(int index, CourseVideo video) {
     final unlocked = video.free || _purchased;
 
-    return Container(
+    return GestureDetector(
+      onTap: unlocked
+          ? () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => VideoPlayerScreen(video: video),
+              ))
+          : null,
+      child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: unlocked ? Colors.white : Colors.white.withOpacity(0.6),
@@ -922,7 +938,20 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           ),
         ],
       ),
+      ),
     );
+  }
+
+  Future<void> _showPaymentSheet(Course course) async {
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _PaymentSheet(course: course),
+    );
+    if (confirmed == true) {
+      setState(() => _purchased = true);
+    }
   }
 
   Widget _buildBottomBar(Course course) {
@@ -974,7 +1003,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => setState(() => _purchased = true),
+                    onPressed: () => _showPaymentSheet(course),
                     style: _primaryButtonStyle(),
                     child: Text(
                       'Enrol Now',
@@ -998,6 +1027,399 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       padding: const EdgeInsets.symmetric(vertical: 16),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Payment bottom sheet
+// ---------------------------------------------------------------------------
+class _PaymentSheet extends StatefulWidget {
+  final Course course;
+  const _PaymentSheet({required this.course});
+
+  @override
+  State<_PaymentSheet> createState() => _PaymentSheetState();
+}
+
+class _PaymentSheetState extends State<_PaymentSheet> {
+  // 0 = select method, 1 = processing, 2 = success
+  int _step = 0;
+  int _selectedMethod = 0;
+
+  final List<Map<String, dynamic>> _methods = [
+    {'label': 'Credit / Debit Card', 'icon': Icons.credit_card},
+    {'label': 'Online Banking (FPX)', 'icon': Icons.account_balance},
+    {'label': 'Touch \'n Go eWallet', 'icon': Icons.account_balance_wallet},
+  ];
+
+  Future<void> _pay() async {
+    setState(() => _step = 1);
+    await Future.delayed(const Duration(seconds: 2));
+    setState(() => _step = 2);
+    await Future.delayed(const Duration(seconds: 1));
+    if (mounted) Navigator.of(context).pop(true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          24, 20, 24, MediaQuery.of(context).padding.bottom + 24),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: _step == 0
+            ? _buildSelectMethod()
+            : _step == 1
+                ? _buildProcessing()
+                : _buildSuccess(),
+      ),
+    );
+  }
+
+  Widget _buildSelectMethod() {
+    return Column(
+      key: const ValueKey('select'),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Center(
+          child: Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.border,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Complete Payment',
+          style: GoogleFonts.sora(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textDark,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          widget.course.title,
+          style: GoogleFonts.urbanist(
+            fontSize: 13,
+            color: AppColors.textGray,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.lightAccent,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Total',
+                style: GoogleFonts.urbanist(
+                  fontSize: 14,
+                  color: AppColors.textGray,
+                ),
+              ),
+              Text(
+                widget.course.price,
+                style: GoogleFonts.sora(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textDark,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Payment Method',
+          style: GoogleFonts.sora(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textDark,
+          ),
+        ),
+        const SizedBox(height: 12),
+        for (int i = 0; i < _methods.length; i++) ...[
+          GestureDetector(
+            onTap: () => setState(() => _selectedMethod = i),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: _selectedMethod == i
+                      ? AppColors.primary
+                      : AppColors.border,
+                  width: _selectedMethod == i ? 2 : 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(_methods[i]['icon'] as IconData,
+                      size: 20, color: AppColors.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _methods[i]['label'] as String,
+                      style: GoogleFonts.urbanist(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                  ),
+                  if (_selectedMethod == i)
+                    const Icon(Icons.check_circle,
+                        size: 18, color: AppColors.primary),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: _pay,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: Text(
+              'Pay ${widget.course.price}',
+              style: GoogleFonts.sora(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProcessing() {
+    return SizedBox(
+      key: const ValueKey('processing'),
+      height: 220,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(
+              color: AppColors.primary,
+              strokeWidth: 3,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Processing payment...',
+              style: GoogleFonts.sora(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Please do not close this screen',
+              style: GoogleFonts.urbanist(
+                fontSize: 13,
+                color: AppColors.textGray,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSuccess() {
+    return SizedBox(
+      key: const ValueKey('success'),
+      height: 220,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: const BoxDecoration(
+                color: AppColors.green,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check, color: Colors.white, size: 32),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Payment Successful!',
+              style: GoogleFonts.sora(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'You are now enrolled in this course',
+              style: GoogleFonts.urbanist(
+                fontSize: 13,
+                color: AppColors.textGray,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Video player screen (mock)
+// ---------------------------------------------------------------------------
+class VideoPlayerScreen extends StatelessWidget {
+  final CourseVideo video;
+  const VideoPlayerScreen({super.key, required this.video});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text(
+          video.title,
+          style: GoogleFonts.sora(fontSize: 14, color: Colors.white),
+        ),
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          // Video area
+          Expanded(
+            child: Center(
+              child: Container(
+                width: double.infinity,
+                color: const Color(0xFF1A1A1A),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.4),
+                            blurRadius: 24,
+                            spreadRadius: 4,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.play_arrow,
+                          color: Colors.white, size: 36),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      video.title,
+                      style: GoogleFonts.sora(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      video.duration,
+                      style: GoogleFonts.urbanist(
+                        fontSize: 13,
+                        color: Colors.white54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Mock controls bar
+          Container(
+            color: const Color(0xFF111111),
+            padding: EdgeInsets.fromLTRB(
+                20, 16, 20, MediaQuery.of(context).padding.bottom + 16),
+            child: Column(
+              children: [
+                // Progress bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: const LinearProgressIndicator(
+                    value: 0,
+                    minHeight: 4,
+                    backgroundColor: Color(0xFF333333),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('0:00',
+                        style: GoogleFonts.urbanist(
+                            fontSize: 12, color: Colors.white54)),
+                    Row(
+                      children: [
+                        const Icon(Icons.replay_10,
+                            color: Colors.white70, size: 28),
+                        const SizedBox(width: 24),
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.play_arrow,
+                              color: Colors.white, size: 28),
+                        ),
+                        const SizedBox(width: 24),
+                        const Icon(Icons.forward_10,
+                            color: Colors.white70, size: 28),
+                      ],
+                    ),
+                    Text(video.duration,
+                        style: GoogleFonts.urbanist(
+                            fontSize: 12, color: Colors.white54)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
