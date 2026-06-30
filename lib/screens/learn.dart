@@ -10,6 +10,7 @@
 //
 // Everything below is self-contained in one file.
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -94,7 +95,7 @@ const List<Course> kCourses = [
   Course(
     id: 1,
     title: 'Fiqh of Prayer (Solat)',
-    instructor: 'Ustaz Dr. Hafiz',
+    instructor: 'Ustaz Azhar Idrus',
     mosque: 'Masjid Al-Hidayah',
     rating: 4.9,
     students: 1240,
@@ -119,7 +120,7 @@ const List<Course> kCourses = [
   Course(
     id: 2,
     title: 'Quran Tajweed Mastery',
-    instructor: 'Ustazah Nurul Ain',
+    instructor: ' Prof Ustazah Muhaya',
     mosque: 'Masjid Omar Al-Khattab',
     rating: 4.8,
     students: 890,
@@ -143,7 +144,7 @@ const List<Course> kCourses = [
   Course(
     id: 3,
     title: 'Islamic Aqidah Foundation',
-    instructor: 'Ustaz Ismail Kassim',
+    instructor: 'Ustaz Kazim Elias',
     mosque: 'Masjid Al-Falah',
     rating: 4.7,
     students: 654,
@@ -166,7 +167,7 @@ const List<Course> kCourses = [
   Course(
     id: 4,
     title: 'Seerah: Life of the Prophet',
-    instructor: 'Ustaz Rahim Bakar',
+    instructor: 'Ustaz Abdul Somad',
     mosque: 'Masjid Al-Amin',
     rating: 5.0,
     students: 2100,
@@ -665,11 +666,48 @@ class CourseDetailScreen extends StatefulWidget {
 }
 
 class _CourseDetailScreenState extends State<CourseDetailScreen> {
-  late bool _purchased = widget.course.priceNum == 0;
+  bool _purchased = false;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEnrollment();
+  }
+
+  Future<void> _loadEnrollment() async {
+    if (widget.course.priceNum == 0) {
+      setState(() { _purchased = true; _loading = false; });
+      return;
+    }
+    final doc = await FirebaseFirestore.instance
+        .collection('enrollments')
+        .doc(widget.course.id.toString())
+        .get();
+    if (mounted) {
+      setState(() { _purchased = doc.exists; _loading = false; });
+    }
+  }
+
+  Future<void> _saveEnrollment() async {
+    await FirebaseFirestore.instance
+        .collection('enrollments')
+        .doc(widget.course.id.toString())
+        .set({'enrolledAt': FieldValue.serverTimestamp()});
+  }
 
   @override
   Widget build(BuildContext context) {
     final course = widget.course;
+
+    if (_loading) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -950,6 +988,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       builder: (_) => _PaymentSheet(course: course),
     );
     if (confirmed == true) {
+      await _saveEnrollment();
       setState(() => _purchased = true);
     }
   }
