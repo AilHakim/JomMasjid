@@ -1,9 +1,15 @@
 // mosque_screen.dart
 //
 // Flutter port of the React "Nearby Mosques" screen.
-// Asks for the device's location, queries OpenStreetMap's Overpass API for
-// real mosques within a radius of that location, sorts them by distance,
-// and lets the user open turn-by-turn directions in Google Maps.
+//
+// HYBRID DATA STRATEGY:
+//   - The nearby LIST uses OpenStreetMap's free Overpass API to discover
+//     mosque locations (no API key, no cost, but sparse contact details).
+//   - The DETAIL screen, once a mosque is tapped, enriches that single
+//     result with the Google Places API (phone, website, formatted
+//     address, real opening-hours status, rating) — this keeps API usage
+//     (and cost) limited to mosques people actually open, instead of
+//     paying for every mosque in the list on every search.
 //
 // --- pubspec.yaml dependencies you'll need ---
 //   dependencies:
@@ -12,7 +18,20 @@
 //     geolocator: ^14.0.3
 //     google_fonts: ^6.2.1     # for Sora / Urbanist, optional but matches the design
 //     url_launcher: ^6.3.0     # for the "Get Directions" button
-//     http: ^1.2.0             # for querying the Overpass API
+//     http: ^1.2.0             # for querying Overpass + Google Places
+//
+// --- Google Places API setup ---
+//   1. In Google Cloud Console, create/select a project, enable the
+//      "Places API" (the older Places API, not Places API (New) unless you
+//      adjust the endpoints below), and create an API key.
+//   2. Restrict the key (Android app / iOS bundle restriction recommended)
+//      so it can't be abused if extracted from the app binary.
+//   3. Paste it into GooglePlacesService.apiKey below.
+//   4. Google Places has a monthly free credit, then pay-as-you-go pricing
+//      — Find Place + Place Details together cost a small amount per
+//      mosque a user actually opens. Keep an eye on usage in Cloud Console.
+//   5. For production, consider proxying these calls through your own
+//      backend so the key isn't shipped inside the public app binary.
 //
 // --- Android: add to android/app/src/main/AndroidManifest.xml ---
 //   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
@@ -78,18 +97,25 @@ TextStyle urbanist({double size = 13, FontWeight weight = FontWeight.w400, Color
 class Mosque {
   final int id;
   final String name;
-  final String address;
+  String address; // mutable: may be replaced by a more complete Google address
   final double latitude;
   final double longitude;
   final String image;
   final List<String> images;
-  final String phone;
-  final String website;
+  String phone; // mutable: filled in by Google Places when available
+  String website; // mutable: filled in by Google Places when available
   final bool premium;
   final String description;
 
   /// Populated at runtime once the user's location is known.
   double? distanceInMeters;
+
+  /// The following are only populated after a successful call to
+  /// GooglePlacesService.enrichMosque() — null means "not fetched yet" or
+  /// "Google didn't have this field", not "closed"/"zero".
+  bool? isOpenNow;
+  double? googleRating;
+  int? googleRatingsTotal;
 
   Mosque({
     required this.id,
@@ -104,6 +130,9 @@ class Mosque {
     required this.premium,
     required this.description,
     this.distanceInMeters,
+    this.isOpenNow,
+    this.googleRating,
+    this.googleRatingsTotal,
   });
 
   /// Human readable distance, e.g. "850 m" or "3.2 km".
@@ -273,6 +302,172 @@ class LocationService {
     }).toList();
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Google Places enrichment — used only on the detail screen, for the one
+// mosque the user actually tapped on. Keeps API usage (and cost) limited
+// instead of calling Google for every mosque in the nearby list.
+// ─────────────────────────────────────────────────────────────────────────
+class GooglePlacesService {
+  // TODO: paste your own Google Places API key here. Restrict it in Google
+  // Cloud Console (Android/iOS app restriction) before shipping.
+  static const String apiKey = 'YOUR_GOOGLE_PLACES_API_KEY';
+
+  static bool get isConfigured => apiKey != 'YOUR_GOOGLE_PLACES_API_KEY' && apiKey.isNotEmpty;
+
+  /// Looks up a Place ID for the given mosque using its name + coordinates
+  /// (a "Find Place" text search biased toward that location), then fetches
+  /// full details for that place. Mutates [mosque] in place with whatever
+  /// Google has on file; fields Google doesn't have are left untouched
+  /// (so the OSM-sourced fallback values stay visible).
+  static const String _unnamedPlaceholder = 'Surau / Mosque (Unnamed)';
+
+  static Future<void> enrichMosque(Mosque mosque) async {
+    if (!isConfigured) {
+      throw Exception(
+        'Google Places API key not configured. Add one in GooglePlacesService.apiKey.',
+      );
+    }
+
+    final placeId = mosque.name == _unnamedPlaceholder
+        // Searching Google by a fake name like "Surau / Mosque (Unnamed)"
+        // can never match anything — use a coordinate-based nearby search
+        // instead, since we at least know exactly where this mosque is.
+        ? await _findPlaceIdByLocation(mosque)
+        : await _findPlaceId(mosque);
+
+    if (placeId == null) {
+      throw Exception(
+        'No matching Google Places listing found for "${mosque.name}". '
+        'This mosque may not be registered on Google Maps yet.',
+      );
+    }
+
+    final details = await _fetchPlaceDetails(placeId);
+    if (details == null) {
+      throw Exception('Google Places returned no usable details for this listing.');
+    }
+
+    final formattedAddress = details['formatted_address'] as String?;
+    final formattedPhone = details['formatted_phone_number'] as String?;
+    final website = details['website'] as String?;
+    final rating = details['rating'];
+    final ratingsTotal = details['user_ratings_total'];
+    final openingHours = details['opening_hours'] as Map<String, dynamic>?;
+
+    if (formattedAddress != null && formattedAddress.isNotEmpty) {
+      mosque.address = formattedAddress;
+    }
+    if (formattedPhone != null && formattedPhone.isNotEmpty) {
+      mosque.phone = formattedPhone;
+    }
+    if (website != null && website.isNotEmpty) {
+      mosque.website = website;
+    }
+    if (rating != null) {
+      mosque.googleRating = (rating as num).toDouble();
+    }
+    if (ratingsTotal != null) {
+      mosque.googleRatingsTotal = (ratingsTotal as num).toInt();
+    }
+    if (openingHours != null && openingHours['open_now'] != null) {
+      mosque.isOpenNow = openingHours['open_now'] as bool;
+    }
+  }
+
+  static Future<String?> _findPlaceId(Mosque mosque) async {
+    final uri = Uri.https('maps.googleapis.com', '/maps/api/place/findplacefromtext/json', {
+      'input': mosque.name,
+      'inputtype': 'textquery',
+      // 'circle:RADIUS@LAT,LNG' actually constrains the search area; the old
+      // 'point:LAT,LNG' format is a much weaker hint and matches more loosely.
+      'locationbias': 'circle:500@${mosque.latitude},${mosque.longitude}',
+      'fields': 'place_id',
+      'key': apiKey,
+    });
+
+    final response = await http.get(uri).timeout(const Duration(seconds: 12));
+    if (response.statusCode != 200) {
+      throw Exception('Find Place request failed with HTTP ${response.statusCode}');
+    }
+
+    final data = json.decode(response.body) as Map<String, dynamic>;
+    final status = data['status'] as String?;
+
+    // REQUEST_DENIED usually means a bad/unrestricted-wrong-API key or
+    // billing not enabled — surface this distinctly so it's not confused
+    // with "this mosque just isn't on Google Maps".
+    if (status == 'REQUEST_DENIED') {
+      throw Exception(
+        'Google Places denied the request: ${data['error_message'] ?? 'check that your API key is valid, '
+            'the Places API is enabled, and billing is active.'}',
+      );
+    }
+    if (status == 'OVER_QUERY_LIMIT') {
+      throw Exception('Google Places quota/billing limit reached.');
+    }
+    if (status != 'OK' && status != 'ZERO_RESULTS') {
+      throw Exception('Google Places Find Place returned status: $status');
+    }
+
+    final candidates = data['candidates'] as List?;
+    if (candidates == null || candidates.isEmpty) return null;
+
+    return (candidates.first as Map<String, dynamic>)['place_id'] as String?;
+  }
+
+  /// Used when we have no usable mosque name (common for OSM nodes that
+  /// were never tagged with one) — searches for the nearest place tagged
+  /// as a mosque around these exact coordinates instead of by name.
+  static Future<String?> _findPlaceIdByLocation(Mosque mosque) async {
+    final uri = Uri.https('maps.googleapis.com', '/maps/api/place/nearbysearch/json', {
+      'location': '${mosque.latitude},${mosque.longitude}',
+      'radius': '150',
+      'type': 'mosque',
+      'key': apiKey,
+    });
+
+    final response = await http.get(uri).timeout(const Duration(seconds: 12));
+    if (response.statusCode != 200) {
+      throw Exception('Nearby Search request failed with HTTP ${response.statusCode}');
+    }
+
+    final data = json.decode(response.body) as Map<String, dynamic>;
+    final status = data['status'] as String?;
+
+    if (status == 'REQUEST_DENIED') {
+      throw Exception(
+        'Google Places denied the request: ${data['error_message'] ?? 'check your API key/billing.'}',
+      );
+    }
+    if (status != 'OK' && status != 'ZERO_RESULTS') {
+      throw Exception('Google Places Nearby Search returned status: $status');
+    }
+
+    final results = data['results'] as List?;
+    if (results == null || results.isEmpty) return null;
+
+    return (results.first as Map<String, dynamic>)['place_id'] as String?;
+  }
+
+  static Future<Map<String, dynamic>?> _fetchPlaceDetails(String placeId) async {
+    final uri = Uri.https('maps.googleapis.com', '/maps/api/place/details/json', {
+      'place_id': placeId,
+      'fields': 'formatted_address,formatted_phone_number,website,'
+          'opening_hours,rating,user_ratings_total',
+      'key': apiKey,
+    });
+
+    final response = await http.get(uri).timeout(const Duration(seconds: 12));
+    if (response.statusCode != 200) return null;
+
+    final data = json.decode(response.body) as Map<String, dynamic>;
+    if (data['status'] != 'OK') return null;
+
+    return data['result'] as Map<String, dynamic>?;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // Main screen
 // ─────────────────────────────────────────────────────────────────────────
@@ -694,6 +889,30 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
   final PageController _pageController = PageController();
   int _activeImageIndex = 0;
 
+  // Google Places enrichment state for the contact card.
+  bool _isEnriching = true;
+  String? _enrichmentError;
+
+  @override
+  void initState() {
+    super.initState();
+    _enrichFromGoogle();
+  }
+
+  Future<void> _enrichFromGoogle() async {
+    try {
+      await GooglePlacesService.enrichMosque(widget.mosque);
+      if (mounted) setState(() => _isEnriching = false);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isEnriching = false;
+          _enrichmentError = e.toString();
+        });
+      }
+    }
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -749,6 +968,8 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
                   padding: const EdgeInsets.all(20),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
+                      _buildGoogleStatusRow(mosque),
+                      const SizedBox(height: 12),
                       Text(mosque.description, style: urbanist(size: 13.5, weight: FontWeight.w400).copyWith(height: 1.5)),
                       const SizedBox(height: 16),
                       _buildContactCard(mosque),
@@ -866,6 +1087,65 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
     );
   }
 
+  /// Shows real opening-hours status + rating once Google Places
+  /// enrichment finishes — these only exist via Google, OSM has no
+  /// equivalent data, so this row is empty until enrichment succeeds.
+  Widget _buildGoogleStatusRow(Mosque mosque) {
+    if (_isEnriching) {
+      return Row(
+        children: [
+          const SizedBox(
+            width: 12,
+            height: 12,
+            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
+          ),
+          const SizedBox(width: 8),
+          Text('Checking live hours & rating…', style: urbanist(size: 12)),
+        ],
+      );
+    }
+
+    if (mosque.isOpenNow == null && mosque.googleRating == null) {
+      // Enrichment finished but Google had nothing usable for this place
+      // (or the API key isn't configured) — say so rather than pretend.
+      return Text(
+        'Live hours & rating unavailable for this mosque.',
+        style: urbanist(size: 11, color: AppColors.textSecondary),
+      );
+    }
+
+    return Row(
+      children: [
+        if (mosque.isOpenNow != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: mosque.isOpenNow! ? AppColors.successBg : AppColors.dangerBg,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              mosque.isOpenNow! ? 'Open Now' : 'Closed',
+              style: urbanist(
+                size: 11,
+                weight: FontWeight.w600,
+                color: mosque.isOpenNow! ? AppColors.success : AppColors.danger,
+              ),
+            ),
+          ),
+        if (mosque.isOpenNow != null && mosque.googleRating != null) const SizedBox(width: 10),
+        if (mosque.googleRating != null) ...[
+          const Icon(Icons.star, size: 14, color: AppColors.star),
+          const SizedBox(width: 4),
+          Text(
+            '${mosque.googleRating!.toStringAsFixed(1)}'
+            '${mosque.googleRatingsTotal != null ? ' (${mosque.googleRatingsTotal})' : ''}',
+            style: urbanist(size: 12, weight: FontWeight.w600, color: AppColors.textPrimary),
+          ),
+        ],
+      ],
+    );
+  }
+
   Widget _buildContactCard(Mosque mosque) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -877,6 +1157,22 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
           _ContactRow(icon: Icons.phone, text: mosque.phone),
           const SizedBox(height: 12),
           _ContactRow(icon: Icons.public, text: mosque.website, color: AppColors.accent),
+          if (_enrichmentError != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.info_outline, size: 14, color: AppColors.textSecondary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Showing OpenStreetMap data only.\n$_enrichmentError',
+                    style: urbanist(size: 11, color: AppColors.textSecondary),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
