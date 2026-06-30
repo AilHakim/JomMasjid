@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // NEW IMPORT
-import '../admin_screens/admin_donation_screen.dart';
+
 
 // --- DATA MODELS ---
 class CampaignTransaction {
@@ -60,7 +60,7 @@ class _DonationScreenState extends State<DonationScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Column(
+        title: const Column( 
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("Donations", style: TextStyle(color: Color(0xFF242424), fontWeight: FontWeight.bold, fontSize: 20)),
@@ -73,18 +73,6 @@ class _DonationScreenState extends State<DonationScreen> {
             icon: Icon(showAmounts ? Icons.visibility : Icons.visibility_off, color: const Color(0xFF242424)),
             onPressed: () => setState(() => showAmounts = !showAmounts),
           ),
-          
-          // 2. TEMPORARY ADMIN BUTTON (We will delete this later!)
-          IconButton(
-            icon: const Icon(Icons.add_circle, color: Color(0xFFC67C4E)),
-            tooltip: "Admin Test: Add Campaign",
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AdminDonationScreen()),
-              );
-            },
-          )
         ],
       ),
       // NEW: StreamBuilder listens to Firestore in real-time

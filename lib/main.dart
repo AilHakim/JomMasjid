@@ -5,6 +5,7 @@ import 'screens/donation_screen.dart';
 //import 'screens/feed.dart';
 //import 'screens/mosques.dart';
 //import 'screens/learn.dart';
+import 'screens/login_screen.dart';
 
 
 void main() async {
@@ -25,11 +26,11 @@ class JomMasjidApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Fixed Bottom Bar',
-      theme: ThemeData(primarySwatch: Colors.orange),
-      home: const MasterScreen(), // Load the Master Screen first
-    );
+        debugShowCheckedModeBanner: false,
+        title: 'JomMasjid',
+        theme: ThemeData(primarySwatch: Colors.orange),
+        home: const LoginScreen(), // <-- Boots to the unified portal!
+      );
   }
 }
 
@@ -42,7 +43,7 @@ class MasterScreen extends StatefulWidget {
 
 class _MasterScreenState extends State<MasterScreen> {
   // 1. Keep track of which tab is currently selected (Starts at 0)
-  int _selectedIndex = 3; // Starting at 3 to match the "Events" tab in your image
+  int _selectedIndex = 0; // Starting at 3 to match the "Events" tab in your image
 
   // 2. Create a list of all your different screens
   // Instead of simple Text, these would normally be your full custom screen widgets 
