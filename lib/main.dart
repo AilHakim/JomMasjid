@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart'; // NEW
 import 'firebase_options.dart'; // NEW
 import 'screens/donation_screen.dart';
-import 'screens/feed.dart';
-import 'screens/mosques.dart';
-import 'screens/learn.dart';
+//import 'screens/feed.dart';
+//import 'screens/mosques.dart';
+//import 'screens/learn.dart';
 
 
 void main() async {

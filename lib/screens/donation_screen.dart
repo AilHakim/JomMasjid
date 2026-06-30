@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // NEW IMPORT
+import '../admin_screens/admin_donation_screen.dart';
 
 // --- DATA MODELS ---
 class CampaignTransaction {
@@ -11,7 +13,7 @@ class CampaignTransaction {
 }
 
 class Campaign {
-  final int id;
+  final String id; // CHANGED to String for Firebase IDs
   final String mosque;
   final String title;
   final String description;
@@ -21,58 +23,19 @@ class Campaign {
   final int daysLeft;
   final String image;
   final String category;
-  
+  final bool verified;
   final List<CampaignTransaction> transactions;
 
   Campaign({
     required this.id, required this.mosque, required this.title, required this.description,
     required this.raised, required this.goal, required this.donors, required this.daysLeft,
-    required this.image, required this.category, required this.transactions,
+    required this.image, required this.category, required this.verified, required this.transactions,
   });
 }
 
-// --- HARDCODED DATA ---
-final List<Campaign> campaigns = [
-  Campaign(
-    id: 1,
-    mosque: "Masjid Al-Hidayah",
-    title: "Roof Restoration Project",
-    description: "Complete replacement of damaged roof panels and waterproofing across the main prayer hall.",
-    raised: 45000,
-    goal: 60000,
-    donors: 312,
-    daysLeft: 15,
-    image: "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=600&q=80",
-    category: "Infrastructure",
-    transactions: [
-      CampaignTransaction(name: "Structural Assessment", amount: 5000, date: "Jun 1", status: "completed"),
-      CampaignTransaction(name: "Material Purchase", amount: 18000, date: "Jun 5", status: "completed"),
-      CampaignTransaction(name: "Labour Contract", amount: 12000, date: "Jun 10", status: "in-progress"),
-    ],
-  ),
-  Campaign(
-    id: 2,
-    mosque: "Masjid Umar Al-Khattab",
-    title: "New Air Conditioning System",
-    description: "Installation of energy-efficient cooling system for better comfort during prayers.",
-    raised: 12000,
-    goal: 25000,
-    donors: 98,
-    daysLeft: 30,
-    image: "https://images.unsplash.com/photo-1542931287-023b922fa89b?w=600&q=80",
-    category: "Facilities",
-    transactions: [
-      CampaignTransaction(name: "System Quote & Planning", amount: 1500, date: "Jun 2", status: "completed"),
-      CampaignTransaction(name: "Equipment Order", amount: 15000, date: "Jun 15", status: "pending"),
-    ],
-  ),
-];
-
 // --- MAIN SCREEN WIDGET ---
 class DonationScreen extends StatefulWidget {
-  // Keeping your original parameter just in case your router needs it
   final Map<String, String>? masjidData; 
-  
   const DonationScreen({super.key, this.masjidData});
 
   @override
@@ -92,187 +55,243 @@ class _DonationScreenState extends State<DonationScreen> {
       );
     }
 
-    double totalRaised = campaigns.fold(0, (sum, item) => sum + item.raised);
-    int totalDonors = campaigns.fold(0, (sum, item) => sum + item.donors);
-
     return Scaffold(
       backgroundColor: const Color(0xFFF9F2ED),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Column(
+        title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text("Donations", style: TextStyle(color: Color(0xFF242424), fontWeight: FontWeight.bold, fontSize: 20)),
             Text("Live donation tracker", style: TextStyle(color: Color(0xFF909090), fontSize: 12)),
           ],
         ),
         actions: [
+          // 1. Your existing eye icon
           IconButton(
             icon: Icon(showAmounts ? Icons.visibility : Icons.visibility_off, color: const Color(0xFF242424)),
             onPressed: () => setState(() => showAmounts = !showAmounts),
+          ),
+          
+          // 2. TEMPORARY ADMIN BUTTON (We will delete this later!)
+          IconButton(
+            icon: const Icon(Icons.add_circle, color: Color(0xFFC67C4E)),
+            tooltip: "Admin Test: Add Campaign",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AdminDonationScreen()),
+              );
+            },
           )
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          //total raised and donors
-          Row( 
+      // NEW: StreamBuilder listens to Firestore in real-time
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('donations').snapshots(),
+        builder: (context, snapshot) {
+          // 1. Handle Loading State
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: Color(0xFFC67C4E)));
+          }
+          
+          // 2. Handle Errors
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
+
+          // 3. Handle Empty Data
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text("No active campaigns right now."));
+          }
+
+          // 4. Process the Live Data
+          double totalRaised = 0;
+          int totalDonors = 0;
+          List<Campaign> liveCampaigns = [];
+
+          for (var doc in snapshot.data!.docs) {
+            var data = doc.data() as Map<String, dynamic>;
+            
+            // Safe parsing to handle missing fields gracefully
+            double raised = (data['raised'] ?? 0).toDouble();
+            int donors = (data['donors'] ?? 0).toInt();
+            
+            totalRaised += raised;
+            totalDonors += donors;
+
+            liveCampaigns.add(Campaign(
+              id: doc.id,
+              mosque: data['mosque'] ?? 'Unknown Mosque',
+              title: data['title'] ?? 'Untitled Campaign',
+              description: data['description'] ?? '',
+              raised: raised,
+              goal: (data['goal'] ?? 0).toDouble(),
+              donors: donors,
+              daysLeft: (data['daysLeft'] ?? 0).toInt(),
+              image: data['image'] ?? 'https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=600&q=80',
+              category: data['category'] ?? 'General',
+              verified: data['verified'] ?? false,
+              transactions: [], // We can pull live transactions later!
+            ));
+          }
+
+          // 5. Build the UI with the live data
+          return ListView(
+            padding: const EdgeInsets.all(20),
             children: [
-              //total raised
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFFC67C4E), Color(0xFFE8A07A)]),
-                    borderRadius: BorderRadius.circular(16),
+              // Summary Cards
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [Color(0xFFC67C4E), Color(0xFFE8A07A)]),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.attach_money, color: Colors.white, size: 24),
+                          const SizedBox(height: 8),
+                          const Text("Total Raised", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                          Text(showAmounts ? "RM ${totalRaised.toStringAsFixed(0)}" : "RM ●●●●", 
+                            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.attach_money, color: Colors.white, size: 24),
-                      const SizedBox(height: 8),
-                      const Text("Total Raised", style: TextStyle(color: Colors.white70, fontSize: 12)),
-                      Text(showAmounts ? "RM ${totalRaised.toStringAsFixed(0)}" : "RM ●●●●", 
-                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                    ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.people, color: Color(0xFFC67C4E), size: 24),
+                          const SizedBox(height: 8),
+                          const Text("Total Donors", style: TextStyle(color: Color(0xFF909090), fontSize: 12)),
+                          Text(totalDonors.toString(), 
+                            style: const TextStyle(color: Color(0xFF242424), fontSize: 18, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(width: 12),
-              //total donors
-              Expanded(
+              
+              const SizedBox(height: 24),
+              const Text("Active Campaigns", style: TextStyle(color: Color(0xFF242424), fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+
+              // Dynamic Campaign List
+              ...liveCampaigns.map((campaign) => GestureDetector(
+                onTap: () => setState(() => selectedCampaign = campaign),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.people, color: Color(0xFFC67C4E), size: 24),
-                      const SizedBox(height: 8),
-                      const Text("Total Donors", style: TextStyle(color: Color(0xFF909090), fontSize: 12)),
-                      Text(totalDonors.toString(), 
-                        style: const TextStyle(color: Color(0xFF242424), fontSize: 18, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          
-          const Text("Active Campaigns", style: TextStyle(color: Color(0xFF242424), fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-
-          // mosques that can be donated
-          ...campaigns.map((campaign) => GestureDetector(
-            onTap: () => setState(() => selectedCampaign = campaign),
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Image Header
-                  Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                        child: Image.network(campaign.image, height: 140, width: double.infinity, fit: BoxFit.cover),
+                      Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                            child: Image.network(campaign.image, height: 140, width: double.infinity, fit: BoxFit.cover),
+                          ),
+                          Positioned.fill(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.black.withValues(alpha: 0.0),
+                                    Colors.black.withValues(alpha: 0.8),
+                                  ],
+                                  stops: const [0.0, 0.4, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  // Details
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      //Title and Mosque name
-                      children: [
-                        Text(
-                          campaign.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                        Text(
-                          campaign.mosque, style: const TextStyle(color: Color(0xFF909090), fontSize: 12),
-                        ),
-                        const SizedBox(height: 16),
-                        
-                        // current raised and goal 
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(showAmounts ? "RM ${campaign.raised.toStringAsFixed(0)}" : "RM ●●●●", style: const TextStyle(fontWeight: FontWeight.bold)),
-                            Text("of ${showAmounts ? "RM ${campaign.goal.toStringAsFixed(0)}" : "RM ●●●●"}", style: const TextStyle(color: Color(0xFF909090), fontSize: 12)),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        //progress line
-                        LinearProgressIndicator(
-                          value: campaign.raised / campaign.goal,
-                          backgroundColor: const Color(0xFFF6EBE4),
-                          color: const Color(0xFFC67C4E),
-                          minHeight: 8,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        const SizedBox(height: 12), 
-
-                        // Donors and Days Left
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Total Donors 
+                            Text(campaign.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                            Text(campaign.mosque, style: const TextStyle(color: Color(0xFF909090), fontSize: 12)),
+                            const SizedBox(height: 16),
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Icon(Icons.people_outline, color: Color(0xFF909090), size: 16),
-                                const SizedBox(width: 4),
-                                Text(
-                                  "${campaign.donors} donors", style: const TextStyle(color: Color(0xFF909090), fontSize: 12)
+                                Text(showAmounts ? "RM ${campaign.raised.toStringAsFixed(0)}" : "RM ●●●●", style: const TextStyle(fontWeight: FontWeight.bold)),
+                                Text("of ${showAmounts ? "RM ${campaign.goal.toStringAsFixed(0)}" : "RM ●●●●"}", style: const TextStyle(color: Color(0xFF909090), fontSize: 12)),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            LinearProgressIndicator(
+                              value: (campaign.goal > 0) ? (campaign.raised / campaign.goal).clamp(0.0, 1.0) : 0,
+                              backgroundColor: const Color(0xFFF6EBE4),
+                              color: const Color(0xFFC67C4E),
+                              minHeight: 8,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.people_outline, color: Color(0xFF909090), size: 16),
+                                    const SizedBox(width: 4),
+                                    Text("${campaign.donors} donors", style: const TextStyle(color: Color(0xFF909090), fontSize: 12)),
+                                  ],
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(color: const Color(0xFFF6EBE4), borderRadius: BorderRadius.circular(12)),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.access_time, color: Color(0xFFC67C4E), size: 14),
+                                      const SizedBox(width: 4),
+                                      Text("${campaign.daysLeft}d left", style: const TextStyle(color: Color(0xFFC67C4E), fontSize: 12, fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                            
-                            // Days Left
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF6EBE4), 
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.access_time, color: Color(0xFFC67C4E), size: 14),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    "${campaign.daysLeft}d left", style: const TextStyle(color: Color(0xFFC67C4E), fontSize: 12, fontWeight: FontWeight.bold
-                                    )
-                                  ),
-                                ],
-                              ),
-                            ),
                           ],
                         ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ))
-        ],
+                      )
+                    ],
+                  ),
+                ),
+              )),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
 // --- DETAIL SCREEN WIDGET ---
+// (Your existing CampaignDetail class stays exactly the same!)
 class CampaignDetail extends StatefulWidget {
   final Campaign campaign;
   final VoidCallback onBack;
@@ -288,19 +307,47 @@ class _CampaignDetailState extends State<CampaignDetail> {
   bool donated = false;
   final List<int> presets = [10, 25, 50, 100];
 
+  Future<void> submitDonation() async {
+      if (_amountController.text.isEmpty) return;
+      
+      double donationAmount = double.tryParse(_amountController.text) ?? 0;
+      if (donationAmount <= 0) return;
+
+      try {
+        // Tell Firebase to update this specific campaign's document
+        await FirebaseFirestore.instance
+            .collection('donations')
+            .doc(widget.campaign.id)
+            .update({
+              // FieldValue.increment adds to the existing number in the database
+              'raised': FieldValue.increment(donationAmount),
+              'donors': FieldValue.increment(1), 
+            });
+
+        // Show the success UI
+        setState(() {
+          donated = true;
+        });
+      } catch (e) {
+        // Always good to handle potential errors
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Connection failed. Please try again.")),
+        );
+      }
+    }
+
   @override
   Widget build(BuildContext context) {
-    double progress = widget.campaign.raised / widget.campaign.goal;
+    double progress = (widget.campaign.goal > 0) ? (widget.campaign.raised / widget.campaign.goal).clamp(0.0, 1.0) : 0;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F2ED),
       body: Column(
         children: [
-          // Top Image & Back Button
           Stack(
             children: [
               Image.network(widget.campaign.image, height: 250, width: double.infinity, fit: BoxFit.cover),
-              //back arrow
               Positioned(
                 top: 50, left: 20,
                 child: IconButton(
@@ -309,7 +356,6 @@ class _CampaignDetailState extends State<CampaignDetail> {
                   style: IconButton.styleFrom(backgroundColor: Colors.black45),
                 ),
               ),
-              //title on image
               Positioned(
                 bottom: 20, left: 20, right: 20,
                 child: Column(
@@ -322,13 +368,10 @@ class _CampaignDetailState extends State<CampaignDetail> {
               )
             ],
           ),
-
-          // Scrollable Content (except image)
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                // Progress Box
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
@@ -358,15 +401,11 @@ class _CampaignDetailState extends State<CampaignDetail> {
                     ],
                   ),
                 ),
-                
                 const SizedBox(height: 16),
                 const Text("Description", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 8),
                 Text(widget.campaign.description, style: const TextStyle(color: Color(0xFF909090), height: 1.5)),
-                
                 const SizedBox(height: 24),
-                
-                // Donation Inputs
                 if (!donated) ...[
                   const Text("Quick Donate", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 12),
@@ -398,14 +437,12 @@ class _CampaignDetailState extends State<CampaignDetail> {
                       fillColor: Colors.white,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                     ),
-                    onChanged: (val) => setState((){}), // rebuild to update button state
+                    onChanged: (val) => setState((){}),
                   )
                 ]
               ],
             ),
           ),
-
-          // Bottom Action Button
           Container(
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Color(0xFFF6EBE4)))),
@@ -424,7 +461,7 @@ class _CampaignDetailState extends State<CampaignDetail> {
                   ),
                 )
               : ElevatedButton(
-                  onPressed: _amountController.text.isNotEmpty ? () => setState(() => donated = true) : null,
+                  onPressed: _amountController.text.isNotEmpty ? submitDonation : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFC67C4E),
                     disabledBackgroundColor: const Color(0xFFF6EBE4),
