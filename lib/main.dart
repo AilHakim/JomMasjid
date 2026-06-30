@@ -3,8 +3,23 @@ import 'package:jom_masjid/screens/mosques.dart'; // Make sure this matches your
 // import 'screens/donation_screen.dart';
 // import 'screens/feed.dart';
 // import 'screens/learn.dart';
+import 'package:firebase_core/firebase_core.dart'; // NEW
+import 'firebase_options.dart'; // NEW
+import 'screens/donation_screen.dart';
+import 'screens/feed.dart';
+import 'screens/mosques.dart';
+import 'screens/learn.dart';
 
-void main() {
+
+void main() async {
+  // Ensure Flutter is fully loaded before launching Firebase
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Boot up Firebase using the auto-generated settings
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const JomMasjidApp());
 }
 
@@ -44,7 +59,7 @@ class _MasterScreenState extends State<MasterScreen> {
     const Center(child: Text('Prayer Page', style: TextStyle(fontSize: 24))),
     const Center(child: Text('Events Page', style: TextStyle(fontSize: 24))),
     const Center(child: Text('Learn Page', style: TextStyle(fontSize: 24))),
-    
+    const DonationScreen(),
   ];
 
   void _onItemTapped(int index) {
