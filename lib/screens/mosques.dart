@@ -75,30 +75,16 @@ TextStyle urbanist({double size = 13, FontWeight weight = FontWeight.w400, Color
 // ─────────────────────────────────────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────────────────────────────────────
-class MosqueProgram {
-  final String name;
-  final String time;
-  final String type; // "ongoing" | "upcoming" | "donation"
-
-  const MosqueProgram({required this.name, required this.time, required this.type});
-}
-
 class Mosque {
   final int id;
   final String name;
   final String address;
   final double latitude;
   final double longitude;
-  final double rating;
-  final int reviews;
-  final int capacity;
-  final String status;
   final String image;
   final List<String> images;
   final String phone;
   final String website;
-  final List<String> facilities;
-  final List<MosqueProgram> programs;
   final bool premium;
   final String description;
 
@@ -111,16 +97,10 @@ class Mosque {
     required this.address,
     required this.latitude,
     required this.longitude,
-    required this.rating,
-    required this.reviews,
-    required this.capacity,
-    required this.status,
     required this.image,
     required this.images,
     required this.phone,
     required this.website,
-    required this.facilities,
-    required this.programs,
     required this.premium,
     required this.description,
     this.distanceInMeters,
@@ -135,113 +115,6 @@ class Mosque {
     return '${(distanceInMeters! / 1000).toStringAsFixed(1)} km';
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────
-// Seed data (coordinates are approximate for each listed address)
-// ─────────────────────────────────────────────────────────────────────────
-final List<Mosque> seedMosques = [
-  Mosque(
-    id: 1,
-    name: 'Masjid Al-Hidayah',
-    address: "Jalan Ampang, 50450 Kuala Lumpur",
-    latitude: 3.1592,
-    longitude: 101.7177,
-    rating: 4.9,
-    reviews: 312,
-    capacity: 2000,
-    status: 'Open Now',
-    image: 'https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=600&q=80',
-    images: const [
-      'https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=600&q=80',
-      'https://images.unsplash.com/photo-1585036156171-384164a8c675?w=600&q=80',
-      'https://images.unsplash.com/photo-1567878578-f24aa7e63e3f?w=600&q=80',
-    ],
-    phone: '+603-2161 8888',
-    website: 'www.alhidayah.org.my',
-    facilities: const ['Wudu\' Area', 'Parking', 'Library', 'Nursery', 'Disabled Access'],
-    programs: const [
-      MosqueProgram(name: 'Iftar Jemaah', time: 'Daily, 7:00 PM', type: 'ongoing'),
-      MosqueProgram(name: 'Fiqh Class', time: 'Saturday, after Isyak', type: 'ongoing'),
-      MosqueProgram(name: 'Quran Recitation', time: 'Sunday, 9:00 AM', type: 'upcoming'),
-      MosqueProgram(name: 'Eid Celebration', time: 'Jun 20, 8:00 AM', type: 'upcoming'),
-    ],
-    premium: true,
-    description:
-        'Masjid Al-Hidayah is one of the main mosques in Kuala Lumpur, serving the Muslim '
-        'community for over 40 years. Known for its inclusive programs and world-class facilities.',
-  ),
-  Mosque(
-    id: 2,
-    name: 'Masjid Umar Al-Khattab',
-    address: 'Jalan PJS 8, Petaling Jaya',
-    latitude: 3.0738,
-    longitude: 101.5778,
-    rating: 4.7,
-    reviews: 198,
-    capacity: 1500,
-    status: 'Open Now',
-    image: 'https://images.unsplash.com/photo-1542931287-023b922fa89b?w=600&q=80',
-    images: const [
-      'https://images.unsplash.com/photo-1542931287-023b922fa89b?w=600&q=80',
-      'https://images.unsplash.com/photo-1567878578-f24aa7e63e3f?w=600&q=80',
-    ],
-    phone: '+603-7955 1234',
-    website: 'www.masjidomar.org.my',
-    facilities: const ["Wudu' Area", 'Parking', 'Cafe'],
-    programs: const [
-      MosqueProgram(name: 'Weekly Fiqh', time: 'Saturday, after Isyak', type: 'ongoing'),
-      MosqueProgram(name: 'Youth Program', time: 'Friday, 8:00 PM', type: 'ongoing'),
-    ],
-    premium: false,
-    description: 'A modern mosque with dynamic programs for the youth and community of Petaling Jaya.',
-  ),
-  Mosque(
-    id: 3,
-    name: 'Masjid Al-Falah',
-    address: 'Seksyen 7, Shah Alam',
-    latitude: 3.0738,
-    longitude: 101.5183,
-    rating: 4.8,
-    reviews: 256,
-    capacity: 3000,
-    status: 'Open Now',
-    image: 'https://images.unsplash.com/photo-1588776814546-1ffbb2c3e0c9?w=600&q=80',
-    images: const [
-      'https://images.unsplash.com/photo-1588776814546-1ffbb2c3e0c9?w=600&q=80',
-    ],
-    phone: '+603-5541 9999',
-    website: 'www.alfalah.org.my',
-    facilities: const ["Wudu' Area", 'Parking', 'Library', 'Disabled Access', 'Air-Conditioned'],
-    programs: const [
-      MosqueProgram(name: 'Roof Restoration', time: 'Ongoing Donation', type: 'donation'),
-      MosqueProgram(name: 'Tarawih Prayer', time: 'Nightly, after Isyak', type: 'ongoing'),
-    ],
-    premium: true,
-    description:
-        "Shah Alam's landmark mosque, featuring stunning architecture and comprehensive community services.",
-  ),
-  Mosque(
-    id: 4,
-    name: 'Masjid Al-Amin',
-    address: 'Damansara Heights, KL',
-    latitude: 3.1570,
-    longitude: 101.6580,
-    rating: 4.6,
-    reviews: 145,
-    capacity: 800,
-    status: 'Closed',
-    image: 'https://images.unsplash.com/photo-1567878578-f24aa7e63e3f?w=600&q=80',
-    images: const ['https://images.unsplash.com/photo-1567878578-f24aa7e63e3f?w=600&q=80'],
-    phone: '+603-2095 7788',
-    website: 'www.alamin.org.my',
-    facilities: const ["Wudu' Area", 'Parking'],
-    programs: const [
-      MosqueProgram(name: 'Seerah Class', time: 'Sunday, after Asar', type: 'ongoing'),
-    ],
-    premium: false,
-    description: 'A community-centered mosque focused on education and youth development.',
-  ),
-];
 
 // ─────────────────────────────────────────────────────────────────────────
 // Location service — wraps the geolocator package
@@ -390,24 +263,16 @@ class LocationService {
             'Address not listed on OSM',
         latitude: latitude,
         longitude: longitude,
-        // Placeholder values for fields OSM doesn't supply.
-        rating: 5.0,
-        reviews: 0,
-        capacity: 0,
-        status: 'Open Now',
         image: 'https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=600&q=80',
         images: const ['https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=600&q=80'],
         phone: tags['phone'] ?? tags['contact:phone'] ?? 'N/A',
         website: tags['website'] ?? tags['contact:website'] ?? 'N/A',
-        facilities: const ["Wudu' Area", 'Prayer Space'],
-        programs: const [],
         premium: false,
         description: tags['description'] ?? 'A local mosque identified via OpenStreetMap.',
       );
     }).toList();
   }
 }
-
 // ─────────────────────────────────────────────────────────────────────────
 // Main screen
 // ─────────────────────────────────────────────────────────────────────────
@@ -428,10 +293,32 @@ class _MosqueScreenState extends State<MosqueScreen> {
   String? _locationError;
   Position? _resolvedPosition; // kept so you can see exactly what GPS returned
 
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  /// Mosques matching the current search query (by name or address).
+  /// Falls back to the full list when the search box is empty.
+  List<Mosque> get _filteredMosques {
+    if (_searchQuery.trim().isEmpty) return _mosques;
+    final q = _searchQuery.trim().toLowerCase();
+    return _mosques
+        .where((m) => m.name.toLowerCase().contains(q) || m.address.toLowerCase().contains(q))
+        .toList();
+  }
+
   @override
   void initState() {
     super.initState();
     _loadLocationAndSort();
+    _searchController.addListener(() {
+      setState(() => _searchQuery = _searchController.text);
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadLocationAndSort() async {
@@ -492,7 +379,6 @@ class _MosqueScreenState extends State<MosqueScreen> {
         child: Column(
           children: [
             _buildHeader(),
-            _buildMapPlaceholder(),
             Expanded(child: _buildMosqueList()),
           ],
         ),
@@ -517,7 +403,7 @@ class _MosqueScreenState extends State<MosqueScreen> {
                     ? 'Locating you…'
                     : _locationError != null
                         ? 'Location unavailable · ${_mosques.length} mosques found'
-                        : '${_mosques.length} mosques found nearby',
+                        : '${_filteredMosques.length} mosques found nearby',
                 style: urbanist(size: 12),
               ),
               if (_locationError != null) ...[
@@ -569,7 +455,7 @@ class _MosqueScreenState extends State<MosqueScreen> {
             children: [
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -579,7 +465,24 @@ class _MosqueScreenState extends State<MosqueScreen> {
                     children: [
                       const Icon(Icons.search, size: 18, color: AppColors.textSecondary),
                       const SizedBox(width: 10),
-                      Text('Search mosques...', style: urbanist(size: 14)),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          style: urbanist(size: 14, color: AppColors.textPrimary),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            border: InputBorder.none,
+                            hintText: 'Search mosques...',
+                            hintStyle: urbanist(size: 14),
+                            contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                        ),
+                      ),
+                      if (_searchQuery.isNotEmpty)
+                        GestureDetector(
+                          onTap: () => _searchController.clear(),
+                          child: const Icon(Icons.close, size: 16, color: AppColors.textSecondary),
+                        ),
                     ],
                   ),
                 ),
@@ -597,47 +500,6 @@ class _MosqueScreenState extends State<MosqueScreen> {
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMapPlaceholder() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      height: 140,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(24)),
-      child: Stack(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFFE8F0E8), Color(0xFFD0E0D0)],
-              ),
-            ),
-          ),
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: const BoxDecoration(color: AppColors.accent, shape: BoxShape.circle),
-                  child: const Icon(Icons.location_on, color: Colors.white, size: 24),
-                ),
-                const SizedBox(height: 8),
-                Text('Interactive Map View', style: urbanist(size: 12, weight: FontWeight.w500, color: AppColors.textPrimary)),
-              ],
-            ),
-          ),
-          // Decorative pins, same as the placeholder dots in the original design.
-          const Positioned(top: 16, left: 48, child: _MapPin(color: AppColors.accent, filled: true)),
-          const Positioned(top: 32, right: 64, child: _MapPin(color: AppColors.textSecondary)),
-          const Positioned(bottom: 24, left: 110, child: _MapPin(color: AppColors.textSecondary)),
         ],
       ),
     );
@@ -687,47 +549,39 @@ class _MosqueScreenState extends State<MosqueScreen> {
       );
     }
 
+    final results = _filteredMosques;
+
+    if (results.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.search_off, size: 32, color: AppColors.textSecondary),
+              const SizedBox(height: 12),
+              Text(
+                'No mosques match "$_searchQuery".',
+                textAlign: TextAlign.center,
+                style: urbanist(size: 12),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-      itemCount: _mosques.length,
+      itemCount: results.length,
       separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
-        final mosque = _mosques[index];
+        final mosque = results[index];
         return MosqueCard(mosque: mosque, onTap: () => _openMosqueDetail(mosque));
       },
     );
   }
 }
-
-class _MapPin extends StatelessWidget {
-  final Color color;
-  final bool filled;
-  const _MapPin({required this.color, this.filled = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: filled ? 24 : 20,
-      height: filled ? 24 : 20,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 3)],
-      ),
-      child: filled
-          ? Center(
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-              ),
-            )
-          : null,
-    );
-  }
-}
-
 // ─────────────────────────────────────────────────────────────────────────
 // Mosque list card
 // ─────────────────────────────────────────────────────────────────────────
@@ -736,8 +590,6 @@ class MosqueCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const MosqueCard({super.key, required this.mosque, required this.onTap});
-
-  bool get _isOpen => mosque.status == 'Open Now';
 
   @override
   Widget build(BuildContext context) {
@@ -798,17 +650,8 @@ class MosqueCard extends StatelessWidget {
                         ],
                       ),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.star, size: 11, color: AppColors.star),
-                              const SizedBox(width: 4),
-                              Text(mosque.rating.toString(), style: urbanist(size: 12, weight: FontWeight.w600, color: AppColors.textPrimary)),
-                              const SizedBox(width: 8),
-                              _StatusBadge(label: mosque.status, isPositive: _isOpen),
-                            ],
-                          ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(color: AppColors.accentLight, borderRadius: BorderRadius.circular(16)),
@@ -835,22 +678,6 @@ class MosqueCard extends StatelessWidget {
   }
 }
 
-class _StatusBadge extends StatelessWidget {
-  final String label;
-  final bool isPositive;
-  const _StatusBadge({required this.label, required this.isPositive});
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = isPositive ? AppColors.successBg : AppColors.dangerBg;
-    final fg = isPositive ? AppColors.success : AppColors.danger;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(16)),
-      child: Text(label, style: urbanist(size: 10, weight: FontWeight.w600, color: fg)),
-    );
-  }
-}
 
 // ─────────────────────────────────────────────────────────────────────────
 // Detail screen
@@ -909,7 +736,6 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final mosque = widget.mosque;
-    final isOpen = mosque.status == 'Open Now';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -923,37 +749,9 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
                   padding: const EdgeInsets.all(20),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
-                      Row(
-                        children: [
-                          _StatusBadgeLarge(label: mosque.status, isPositive: isOpen),
-                          const SizedBox(width: 12),
-                          const Icon(Icons.groups, size: 14, color: AppColors.textSecondary),
-                          const SizedBox(width: 6),
-                          Text('Capacity: ${_formatNumber(mosque.capacity)}', style: urbanist(size: 12)),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
                       Text(mosque.description, style: urbanist(size: 13.5, weight: FontWeight.w400).copyWith(height: 1.5)),
                       const SizedBox(height: 16),
                       _buildContactCard(mosque),
-                      const SizedBox(height: 16),
-                      Text('Facilities', style: sora(size: 14)),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: mosque.facilities
-                            .map((f) => Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                                  decoration: BoxDecoration(color: AppColors.accentLight, borderRadius: BorderRadius.circular(20)),
-                                  child: Text(f, style: urbanist(size: 12, weight: FontWeight.w500, color: AppColors.accent)),
-                                ))
-                            .toList(),
-                      ),
-                      const SizedBox(height: 20),
-                      Text('Programs', style: sora(size: 14)),
-                      const SizedBox(height: 10),
-                      ...mosque.programs.map((p) => _ProgramTile(program: p)),
                       const SizedBox(height: 12),
                     ]),
                   ),
@@ -1055,13 +853,6 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(Icons.star, size: 12, color: AppColors.star),
-                    const SizedBox(width: 4),
-                    Text('${mosque.rating} (${mosque.reviews})',
-                        style: GoogleFonts.urbanist(fontSize: 12, color: Colors.white)),
-                    const SizedBox(width: 8),
-                    Text('·', style: GoogleFonts.urbanist(color: Colors.white.withValues(alpha: 0.5))),
-                    const SizedBox(width: 8),
                     const Icon(Icons.location_on, size: 12, color: Colors.white),
                     const SizedBox(width: 4),
                     Text(mosque.distanceLabel, style: GoogleFonts.urbanist(fontSize: 12, color: Colors.white)),
@@ -1120,33 +911,6 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
       ),
     );
   }
-
-  String _formatNumber(int n) {
-    final s = n.toString();
-    final buffer = StringBuffer();
-    for (int i = 0; i < s.length; i++) {
-      if (i > 0 && (s.length - i) % 3 == 0) buffer.write(',');
-      buffer.write(s[i]);
-    }
-    return buffer.toString();
-  }
-}
-
-class _StatusBadgeLarge extends StatelessWidget {
-  final String label;
-  final bool isPositive;
-  const _StatusBadgeLarge({required this.label, required this.isPositive});
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = isPositive ? AppColors.successBg : AppColors.dangerBg;
-    final fg = isPositive ? AppColors.success : AppColors.danger;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
-      child: Text('●  $label', style: urbanist(size: 12, weight: FontWeight.w600, color: fg)),
-    );
-  }
 }
 
 class _ContactRow extends StatelessWidget {
@@ -1163,63 +927,6 @@ class _ContactRow extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(child: Text(text, style: urbanist(size: 13, color: color ?? AppColors.textPrimary))),
       ],
-    );
-  }
-}
-
-class _ProgramTile extends StatelessWidget {
-  final MosqueProgram program;
-  const _ProgramTile({required this.program});
-
-  @override
-  Widget build(BuildContext context) {
-    final Color dotColor = switch (program.type) {
-      'ongoing' => AppColors.success,
-      'upcoming' => AppColors.accent,
-      _ => AppColors.info,
-    };
-    final Color badgeBg = switch (program.type) {
-      'ongoing' => AppColors.successBg,
-      'upcoming' => AppColors.accentLight,
-      _ => AppColors.infoBg,
-    };
-    final Color badgeFg = switch (program.type) {
-      'ongoing' => AppColors.success,
-      'upcoming' => AppColors.accent,
-      _ => AppColors.info,
-    };
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-      child: Row(
-        children: [
-          Container(width: 8, height: 8, decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(program.name, style: urbanist(size: 12, weight: FontWeight.w600, color: AppColors.textPrimary)),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    const Icon(Icons.access_time, size: 10, color: AppColors.textSecondary),
-                    const SizedBox(width: 4),
-                    Text(program.time, style: urbanist(size: 11)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(color: badgeBg, borderRadius: BorderRadius.circular(20)),
-            child: Text(program.type, style: urbanist(size: 10, weight: FontWeight.w600, color: badgeFg)),
-          ),
-        ],
-      ),
     );
   }
 }
