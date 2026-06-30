@@ -94,7 +94,7 @@ const List<Course> kCourses = [
   Course(
     id: 1,
     title: 'Fiqh of Prayer (Solat)',
-    instructor: 'Ustaz Dr. Hafiz',
+    instructor: 'Ustaz Abdul Somad',
     mosque: 'Masjid Al-Hidayah',
     rating: 4.9,
     students: 1240,
@@ -119,7 +119,7 @@ const List<Course> kCourses = [
   Course(
     id: 2,
     title: 'Quran Tajweed Mastery',
-    instructor: 'Ustazah Nurul Ain',
+    instructor: 'Datuk Prof. Dr. Muhaya Mohammad ',
     mosque: 'Masjid Omar Al-Khattab',
     rating: 4.8,
     students: 890,
@@ -143,7 +143,7 @@ const List<Course> kCourses = [
   Course(
     id: 3,
     title: 'Islamic Aqidah Foundation',
-    instructor: 'Ustaz Ismail Kassim',
+    instructor: 'Ustaz Azhar Idrus',
     mosque: 'Masjid Al-Falah',
     rating: 4.7,
     students: 654,
@@ -166,7 +166,7 @@ const List<Course> kCourses = [
   Course(
     id: 4,
     title: 'Seerah: Life of the Prophet',
-    instructor: 'Ustaz Rahim Bakar',
+    instructor: 'Ustaz Kazim Elias',
     mosque: 'Masjid Al-Amin',
     rating: 5.0,
     students: 2100,
