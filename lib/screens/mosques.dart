@@ -52,6 +52,10 @@
 //       <action android:name="android.intent.action.VIEW" />
 //       <data android:scheme="geo" />
 //     </intent>
+//     <intent>
+//       <action android:name="android.intent.action.VIEW" />
+//       <data android:scheme="tel" />
+//     </intent>
 //   </queries>
 //
 // --- iOS: add to ios/Runner/Info.plist ---
@@ -97,22 +101,17 @@ TextStyle urbanist({double size = 13, FontWeight weight = FontWeight.w400, Color
 class Mosque {
   final int id;
   final String name;
-  String address; // mutable: may be replaced by a more complete Google address
+  String address;
   final double latitude;
   final double longitude;
   final String image;
   final List<String> images;
-  String phone; // mutable: filled in by Google Places when available
-  String website; // mutable: filled in by Google Places when available
+  String phone;
+  String website;
   final bool premium;
   final String description;
 
-  /// Populated at runtime once the user's location is known.
   double? distanceInMeters;
-
-  /// The following are only populated after a successful call to
-  /// GooglePlacesService.enrichMosque() — null means "not fetched yet" or
-  /// "Google didn't have this field", not "closed"/"zero".
   bool? isOpenNow;
   double? googleRating;
   int? googleRatingsTotal;
@@ -135,7 +134,6 @@ class Mosque {
     this.googleRatingsTotal,
   });
 
-  /// Human readable distance, e.g. "850 m" or "3.2 km".
   String get distanceLabel {
     if (distanceInMeters == null) return '—';
     if (distanceInMeters! < 1000) {
@@ -149,8 +147,6 @@ class Mosque {
 // Location service — wraps the geolocator package
 // ─────────────────────────────────────────────────────────────────────────
 class LocationService {
-  /// Determines the current position of the device, handling the
-  /// service-enabled and permission checks along the way.
   static Future<Position> determinePosition() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -171,24 +167,18 @@ class LocationService {
       );
     }
 
-    const settings = LocationSettings(
-      accuracy: LocationAccuracy.best,
-    );
+    const settings = LocationSettings(accuracy: LocationAccuracy.best);
     try {
       return await Geolocator.getCurrentPosition(
         locationSettings: settings,
       ).timeout(const Duration(seconds: 15));
     } on TimeoutException {
-      // GPS didn't lock in time — fall back to the last known fix rather
-      // than failing outright. Still real device data, just possibly a
-      // few minutes stale.
       final last = await Geolocator.getLastKnownPosition();
       if (last != null) return last;
       return Future.error('Could not get a GPS fix in time. Try again outdoors or near a window.');
     }
   }
 
-  /// Distance in meters between two coordinates.
   static double distanceBetween(
     double startLat,
     double startLng,
@@ -198,7 +188,6 @@ class LocationService {
     return Geolocator.distanceBetween(startLat, startLng, endLat, endLng);
   }
 
-  /// Stream of live position updates (used for "Get Directions" / bearing if needed).
   static Stream<Position> positionStream({double distanceFilterMeters = 50}) {
     final settings = LocationSettings(
       accuracy: LocationAccuracy.high,
@@ -207,11 +196,6 @@ class LocationService {
     return Geolocator.getPositionStream(locationSettings: settings);
   }
 
-  /// Queries OpenStreetMap's Overpass API for Muslim places of worship
-  /// within [radius] meters of the given coordinates.
-  // Public Overpass instances to try, in order. The main server occasionally
-  // rejects requests (e.g. HTTP 406/429) under load, so we fall back to a
-  // mirror rather than failing outright.
   static const List<String> _overpassEndpoints = [
     'https://overpass-api.de/api/interpreter',
     'https://overpass.kumi.systems/api/interpreter',
@@ -244,9 +228,6 @@ class LocationService {
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'Accept': '*/*',
-                // Overpass's usage policy asks for an identifiable client;
-                // some mirrors are stricter about rejecting requests that
-                // look anonymous/scripted without this.
                 'User-Agent': 'JomMasjidApp/1.0 (contact: support@jommasjid.app)',
               },
               body: {'data': query},
@@ -262,7 +243,6 @@ class LocationService {
         );
       } catch (e) {
         lastError = e;
-        // Try the next mirror.
       }
     }
 
@@ -278,7 +258,6 @@ class LocationService {
 
     return elements.map((e) {
       final map = e as Map<String, dynamic>;
-      // 'center' is provided for ways/relations because we requested "out center;"
       final latitude = (map['lat'] ?? map['center']?['lat'] ?? 0.0).toDouble();
       final longitude = (map['lon'] ?? map['center']?['lon'] ?? 0.0).toDouble();
       final tags = (map['tags'] as Map<String, dynamic>?) ?? {};
@@ -304,22 +283,14 @@ class LocationService {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Google Places enrichment — used only on the detail screen, for the one
-// mosque the user actually tapped on. Keeps API usage (and cost) limited
-// instead of calling Google for every mosque in the nearby list.
+// Google Places enrichment
 // ─────────────────────────────────────────────────────────────────────────
 class GooglePlacesService {
-  // TODO: paste your own Google Places API key here. Restrict it in Google
-  // Cloud Console (Android/iOS app restriction) before shipping.
-  static const String apiKey = 'YOUR_GOOGLE_PLACES_API_KEY';
+  // Paste your real Google Places API key between the quotes below.
+  static const String apiKey = 'AIzaSyBslxkYjFUH9dLhfQbQV7Nunx2PMUcFkOI';
 
-  static bool get isConfigured => apiKey != 'YOUR_GOOGLE_PLACES_API_KEY' && apiKey.isNotEmpty;
+  static bool get isConfigured => apiKey.trim().isNotEmpty && apiKey.length > 20 && apiKey != 'YOUR_GOOGLE_PLACES_API_KEY';
 
-  /// Looks up a Place ID for the given mosque using its name + coordinates
-  /// (a "Find Place" text search biased toward that location), then fetches
-  /// full details for that place. Mutates [mosque] in place with whatever
-  /// Google has on file; fields Google doesn't have are left untouched
-  /// (so the OSM-sourced fallback values stay visible).
   static const String _unnamedPlaceholder = 'Surau / Mosque (Unnamed)';
 
   static Future<void> enrichMosque(Mosque mosque) async {
@@ -330,9 +301,6 @@ class GooglePlacesService {
     }
 
     final placeId = mosque.name == _unnamedPlaceholder
-        // Searching Google by a fake name like "Surau / Mosque (Unnamed)"
-        // can never match anything — use a coordinate-based nearby search
-        // instead, since we at least know exactly where this mosque is.
         ? await _findPlaceIdByLocation(mosque)
         : await _findPlaceId(mosque);
 
@@ -379,8 +347,6 @@ class GooglePlacesService {
     final uri = Uri.https('maps.googleapis.com', '/maps/api/place/findplacefromtext/json', {
       'input': mosque.name,
       'inputtype': 'textquery',
-      // 'circle:RADIUS@LAT,LNG' actually constrains the search area; the old
-      // 'point:LAT,LNG' format is a much weaker hint and matches more loosely.
       'locationbias': 'circle:500@${mosque.latitude},${mosque.longitude}',
       'fields': 'place_id',
       'key': apiKey,
@@ -394,9 +360,6 @@ class GooglePlacesService {
     final data = json.decode(response.body) as Map<String, dynamic>;
     final status = data['status'] as String?;
 
-    // REQUEST_DENIED usually means a bad/unrestricted-wrong-API key or
-    // billing not enabled — surface this distinctly so it's not confused
-    // with "this mosque just isn't on Google Maps".
     if (status == 'REQUEST_DENIED') {
       throw Exception(
         'Google Places denied the request: ${data['error_message'] ?? 'check that your API key is valid, '
@@ -416,9 +379,6 @@ class GooglePlacesService {
     return (candidates.first as Map<String, dynamic>)['place_id'] as String?;
   }
 
-  /// Used when we have no usable mosque name (common for OSM nodes that
-  /// were never tagged with one) — searches for the nearest place tagged
-  /// as a mosque around these exact coordinates instead of by name.
   static Future<String?> _findPlaceIdByLocation(Mosque mosque) async {
     final uri = Uri.https('maps.googleapis.com', '/maps/api/place/nearbysearch/json', {
       'location': '${mosque.latitude},${mosque.longitude}',
@@ -479,20 +439,16 @@ class MosqueScreen extends StatefulWidget {
 }
 
 class _MosqueScreenState extends State<MosqueScreen> {
-  // Above this radius (meters), treat the fix as too coarse to trust —
-  // typically means it's Wi-Fi/IP-based rather than real GPS.
   static const double _lowAccuracyThresholdMeters = 1000;
 
   List<Mosque> _mosques = [];
   bool _isLoadingLocation = true;
   String? _locationError;
-  Position? _resolvedPosition; // kept so you can see exactly what GPS returned
+  Position? _resolvedPosition;
 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  /// Mosques matching the current search query (by name or address).
-  /// Falls back to the full list when the search box is empty.
   List<Mosque> get _filteredMosques {
     if (_searchQuery.trim().isEmpty) return _mosques;
     final q = _searchQuery.trim().toLowerCase();
@@ -523,16 +479,13 @@ class _MosqueScreenState extends State<MosqueScreen> {
     });
 
     try {
-      // 1. Ask for (or confirm) location permission and get the device's coordinates.
       final position = await LocationService.determinePosition();
 
-      // 2. Fetch real nearby mosques from OpenStreetMap.
       final liveMosques = await LocationService.fetchNearbyMosques(
         position.latitude,
         position.longitude,
       );
 
-      // 3. Calculate exact distance from the user to each mosque.
       for (final mosque in liveMosques) {
         mosque.distanceInMeters = LocationService.distanceBetween(
           position.latitude,
@@ -542,7 +495,6 @@ class _MosqueScreenState extends State<MosqueScreen> {
         );
       }
 
-      // 4. Sort nearest first.
       liveMosques.sort((a, b) => (a.distanceInMeters ?? double.infinity)
           .compareTo(b.distanceInMeters ?? double.infinity));
 
@@ -605,16 +557,12 @@ class _MosqueScreenState extends State<MosqueScreen> {
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: _loadLocationAndSort,
-                  child: Text('Retry', style: urbanist(size: 12, color: AppColors.accent, weight: FontWeight.w600)),
+                  child: Text('Retry',
+                      style: urbanist(size: 12, color: AppColors.accent, weight: FontWeight.w600)),
                 ),
               ],
             ],
           ),
-          // TEMPORARY DEBUG LINE — remove once you've confirmed location is correct.
-          // Shows exactly what GPS returned: coordinates + accuracy radius in meters.
-          // A large accuracy value (e.g. 500-5000m) means the fix is coarse
-          // (Wi-Fi/cell-based), not a true GPS lock — that's the usual cause
-          // of "wrong" results.
           if (_resolvedPosition != null)
             Padding(
               padding: const EdgeInsets.only(top: 4),
@@ -625,18 +573,21 @@ class _MosqueScreenState extends State<MosqueScreen> {
                 style: urbanist(size: 10, color: AppColors.textSecondary),
               ),
             ),
-          if (_resolvedPosition != null && _resolvedPosition!.accuracy > _lowAccuracyThresholdMeters)
+          if (_resolvedPosition != null &&
+              _resolvedPosition!.accuracy > _lowAccuracyThresholdMeters)
             Container(
               margin: const EdgeInsets.only(top: 10),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(color: AppColors.dangerBg, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                  color: AppColors.dangerBg, borderRadius: BorderRadius.circular(12)),
               child: Row(
                 children: [
                   const Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.danger),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Your location fix is approximate (±${(_resolvedPosition!.accuracy / 1000).toStringAsFixed(1)} km). '
+                      'Your location fix is approximate '
+                      '(±${(_resolvedPosition!.accuracy / 1000).toStringAsFixed(1)} km). '
                       'On desktop browsers this is usually Wi-Fi/IP-based, not GPS. '
                       'Open this app on a phone outdoors for an accurate result.',
                       style: urbanist(size: 11, color: AppColors.danger),
@@ -654,7 +605,9 @@ class _MosqueScreenState extends State<MosqueScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [BoxShadow(color: Color(0x0D000000), blurRadius: 6, offset: Offset(0, 2))],
+                    boxShadow: const [
+                      BoxShadow(color: Color(0x0D000000), blurRadius: 6, offset: Offset(0, 2))
+                    ],
                   ),
                   child: Row(
                     children: [
@@ -676,7 +629,8 @@ class _MosqueScreenState extends State<MosqueScreen> {
                       if (_searchQuery.isNotEmpty)
                         GestureDetector(
                           onTap: () => _searchController.clear(),
-                          child: const Icon(Icons.close, size: 16, color: AppColors.textSecondary),
+                          child: const Icon(Icons.close,
+                              size: 16, color: AppColors.textSecondary),
                         ),
                     ],
                   ),
@@ -689,7 +643,9 @@ class _MosqueScreenState extends State<MosqueScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [BoxShadow(color: Color(0x0D000000), blurRadius: 6, offset: Offset(0, 2))],
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x0D000000), blurRadius: 6, offset: Offset(0, 2))
+                  ],
                 ),
                 child: const Icon(Icons.filter_list, size: 20, color: AppColors.textPrimary),
               ),
@@ -777,6 +733,7 @@ class _MosqueScreenState extends State<MosqueScreen> {
     );
   }
 }
+
 // ─────────────────────────────────────────────────────────────────────────
 // Mosque list card
 // ─────────────────────────────────────────────────────────────────────────
@@ -813,7 +770,8 @@ class MosqueCard extends StatelessWidget {
                         child: Container(
                           width: 20,
                           height: 20,
-                          decoration: const BoxDecoration(color: AppColors.accent, shape: BoxShape.circle),
+                          decoration: const BoxDecoration(
+                              color: AppColors.accent, shape: BoxShape.circle),
                           child: const Icon(Icons.star, size: 10, color: Colors.white),
                         ),
                       ),
@@ -830,15 +788,21 @@ class MosqueCard extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(mosque.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: sora(size: 14)),
+                          Text(mosque.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: sora(size: 14)),
                           const SizedBox(height: 2),
                           Row(
                             children: [
-                              const Icon(Icons.location_on, size: 10, color: AppColors.textSecondary),
+                              const Icon(Icons.location_on,
+                                  size: 10, color: AppColors.textSecondary),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(mosque.address,
-                                    maxLines: 1, overflow: TextOverflow.ellipsis, style: urbanist(size: 11)),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: urbanist(size: 11)),
                               ),
                             ],
                           ),
@@ -849,13 +813,20 @@ class MosqueCard extends StatelessWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(color: AppColors.accentLight, borderRadius: BorderRadius.circular(16)),
+                            decoration: BoxDecoration(
+                                color: AppColors.accentLight,
+                                borderRadius: BorderRadius.circular(16)),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.navigation, size: 10, color: AppColors.accent),
+                                const Icon(Icons.navigation,
+                                    size: 10, color: AppColors.accent),
                                 const SizedBox(width: 4),
-                                Text(mosque.distanceLabel, style: urbanist(size: 11, weight: FontWeight.w600, color: AppColors.accent)),
+                                Text(mosque.distanceLabel,
+                                    style: urbanist(
+                                        size: 11,
+                                        weight: FontWeight.w600,
+                                        color: AppColors.accent)),
                               ],
                             ),
                           ),
@@ -873,7 +844,6 @@ class MosqueCard extends StatelessWidget {
   }
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────
 // Detail screen
 // ─────────────────────────────────────────────────────────────────────────
@@ -889,7 +859,6 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
   final PageController _pageController = PageController();
   int _activeImageIndex = 0;
 
-  // Google Places enrichment state for the contact card.
   bool _isEnriching = true;
   String? _enrichmentError;
 
@@ -923,10 +892,6 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
     final mosque = widget.mosque;
     final coords = '${mosque.latitude},${mosque.longitude}';
 
-    // Try a couple of formats — geo: opens the native maps app directly on
-    // Android if one is installed; the https link is the universal fallback
-    // that works on iOS and Android, and falls back to a browser if no maps
-    // app is installed at all.
     final candidates = <Uri>[
       Uri.parse('geo:$coords?q=$coords(${Uri.encodeComponent(mosque.name)})'),
       Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$coords'),
@@ -934,21 +899,57 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
 
     for (final uri in candidates) {
       try {
-        // Calling launchUrl directly (skipping a canLaunchUrl pre-check) is
-        // the recommended approach — canLaunchUrl can return false on
-        // Android 11+ due to package-visibility restrictions even when the
-        // launch itself would succeed.
         final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
         if (launched) return;
-      } catch (_) {
-        // Try the next candidate.
-      }
+      } catch (_) {}
     }
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not open Google Maps. Is it installed?')),
       );
+    }
+  }
+
+  /// Ensures a URL has a scheme (https://) so it can be launched.
+  /// Many websites stored in Google Places/OSM omit "https://".
+  String _normaliseUrl(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    return 'https://$trimmed';
+  }
+
+  Future<void> _launchWebsite(String raw) async {
+    if (raw == 'N/A') return;
+    final url = _normaliseUrl(raw);
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open $url')),
+        );
+      }
+    }
+  }
+
+  Future<void> _launchPhone(String phone) async {
+    if (phone == 'N/A') return;
+    // Strip spaces and dashes for the tel: URI, keep + for international format.
+    final digits = phone.replaceAll(RegExp(r'[\s\-()]'), '');
+    final uri = Uri.parse('tel:$digits');
+    try {
+      await launchUrl(uri);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not dial $phone')),
+        );
+      }
     }
   }
 
@@ -970,7 +971,9 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
                     delegate: SliverChildListDelegate([
                       _buildGoogleStatusRow(mosque),
                       const SizedBox(height: 12),
-                      Text(mosque.description, style: urbanist(size: 13.5, weight: FontWeight.w400).copyWith(height: 1.5)),
+                      Text(mosque.description,
+                          style: urbanist(size: 13.5, weight: FontWeight.w400)
+                              .copyWith(height: 1.5)),
                       const SizedBox(height: 16),
                       _buildContactCard(mosque),
                       const SizedBox(height: 12),
@@ -1016,7 +1019,9 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
                 child: Container(
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
+                  decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle),
                   child: const Icon(Icons.chevron_left, color: Colors.white),
                 ),
               ),
@@ -1029,13 +1034,19 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
               child: SafeArea(
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(color: AppColors.accent, borderRadius: BorderRadius.circular(20)),
+                  decoration: BoxDecoration(
+                      color: AppColors.accent,
+                      borderRadius: BorderRadius.circular(20)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(Icons.star, size: 10, color: Colors.white),
                       const SizedBox(width: 4),
-                      Text('PREMIUM', style: GoogleFonts.urbanist(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
+                      Text('PREMIUM',
+                          style: GoogleFonts.urbanist(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white)),
                     ],
                   ),
                 ),
@@ -1056,7 +1067,9 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
                     width: active ? 16 : 6,
                     height: 6,
                     decoration: BoxDecoration(
-                      color: active ? Colors.white : Colors.white.withValues(alpha: 0.5),
+                      color: active
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(3),
                     ),
                   );
@@ -1070,13 +1083,19 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(mosque.name, style: GoogleFonts.sora(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
+                Text(mosque.name,
+                    style: GoogleFonts.sora(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white)),
                 const SizedBox(height: 6),
                 Row(
                   children: [
                     const Icon(Icons.location_on, size: 12, color: Colors.white),
                     const SizedBox(width: 4),
-                    Text(mosque.distanceLabel, style: GoogleFonts.urbanist(fontSize: 12, color: Colors.white)),
+                    Text(mosque.distanceLabel,
+                        style:
+                            GoogleFonts.urbanist(fontSize: 12, color: Colors.white)),
                   ],
                 ),
               ],
@@ -1087,9 +1106,6 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
     );
   }
 
-  /// Shows real opening-hours status + rating once Google Places
-  /// enrichment finishes — these only exist via Google, OSM has no
-  /// equivalent data, so this row is empty until enrichment succeeds.
   Widget _buildGoogleStatusRow(Mosque mosque) {
     if (_isEnriching) {
       return Row(
@@ -1106,8 +1122,6 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
     }
 
     if (mosque.isOpenNow == null && mosque.googleRating == null) {
-      // Enrichment finished but Google had nothing usable for this place
-      // (or the API key isn't configured) — say so rather than pretend.
       return Text(
         'Live hours & rating unavailable for this mosque.',
         style: urbanist(size: 11, color: AppColors.textSecondary),
@@ -1132,14 +1146,16 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
               ),
             ),
           ),
-        if (mosque.isOpenNow != null && mosque.googleRating != null) const SizedBox(width: 10),
+        if (mosque.isOpenNow != null && mosque.googleRating != null)
+          const SizedBox(width: 10),
         if (mosque.googleRating != null) ...[
           const Icon(Icons.star, size: 14, color: AppColors.star),
           const SizedBox(width: 4),
           Text(
             '${mosque.googleRating!.toStringAsFixed(1)}'
             '${mosque.googleRatingsTotal != null ? ' (${mosque.googleRatingsTotal})' : ''}',
-            style: urbanist(size: 12, weight: FontWeight.w600, color: AppColors.textPrimary),
+            style: urbanist(
+                size: 12, weight: FontWeight.w600, color: AppColors.textPrimary),
           ),
         ],
       ],
@@ -1147,22 +1163,52 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
   }
 
   Widget _buildContactCard(Mosque mosque) {
+    final hasPhone = mosque.phone != 'N/A';
+    final hasWebsite = mosque.website != 'N/A';
+
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+      decoration:
+          BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
       child: Column(
         children: [
-          _ContactRow(icon: Icons.location_on, text: mosque.address),
+          // Address — not tappable (no standard URI scheme for plain addresses)
+          _ContactRow(
+            icon: Icons.location_on,
+            text: mosque.address,
+          ),
           const SizedBox(height: 12),
-          _ContactRow(icon: Icons.phone, text: mosque.phone),
+
+          // Phone — tappable: launches the dialler
+          GestureDetector(
+            onTap: hasPhone ? () => _launchPhone(mosque.phone) : null,
+            child: _ContactRow(
+              icon: Icons.phone,
+              text: mosque.phone,
+              color: hasPhone ? AppColors.accent : null,
+              underline: hasPhone,
+            ),
+          ),
           const SizedBox(height: 12),
-          _ContactRow(icon: Icons.public, text: mosque.website, color: AppColors.accent),
+
+          // Website — tappable: opens in browser
+          GestureDetector(
+            onTap: hasWebsite ? () => _launchWebsite(mosque.website) : null,
+            child: _ContactRow(
+              icon: Icons.public,
+              text: mosque.website,
+              color: hasWebsite ? AppColors.accent : null,
+              underline: hasWebsite,
+            ),
+          ),
+
           if (_enrichmentError != null) ...[
             const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline, size: 14, color: AppColors.textSecondary),
+                const Icon(Icons.info_outline,
+                    size: 14, color: AppColors.textSecondary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -1200,7 +1246,11 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
             children: [
               const Icon(Icons.navigation, size: 18, color: Colors.white),
               const SizedBox(width: 8),
-              Text('Get Directions', style: GoogleFonts.sora(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
+              Text('Get Directions',
+                  style: GoogleFonts.sora(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white)),
             ],
           ),
         ),
@@ -1209,11 +1259,21 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Reusable contact row — supports optional underline for clickable rows
+// ─────────────────────────────────────────────────────────────────────────
 class _ContactRow extends StatelessWidget {
   final IconData icon;
   final String text;
   final Color? color;
-  const _ContactRow({required this.icon, required this.text, this.color});
+  final bool underline;
+
+  const _ContactRow({
+    required this.icon,
+    required this.text,
+    this.color,
+    this.underline = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1221,7 +1281,18 @@ class _ContactRow extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: AppColors.accent),
         const SizedBox(width: 12),
-        Expanded(child: Text(text, style: urbanist(size: 13, color: color ?? AppColors.textPrimary))),
+        Expanded(
+          child: Text(
+            text,
+            style: urbanist(
+              size: 13,
+              color: color ?? AppColors.textPrimary,
+            ).copyWith(
+              decoration: underline ? TextDecoration.underline : null,
+              decorationColor: color ?? AppColors.textPrimary,
+            ),
+          ),
+        ),
       ],
     );
   }
