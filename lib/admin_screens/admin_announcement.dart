@@ -160,7 +160,7 @@ class _AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
 
                   // Tag Dropdown
                   DropdownButtonFormField<String>(
-                    value: _selectedTag,
+                    initialValue: _selectedTag,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.white,

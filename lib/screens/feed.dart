@@ -1,11 +1,10 @@
-import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -342,7 +341,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         itemBuilder: (context, index) {
                           final doc = filteredPosts[index];
                           final data = doc.data() as Map<String, dynamic>;
-                          final String postId = doc.id; 
+                          //final String postId = doc.id; 
 
                           final String mosque = data['mosque'] ?? 'Unknown Mosque';
                           final String location = data['location'] ?? 'Location TBA';
@@ -369,8 +368,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (tag == "Event") tagColor = const Color(0xFF4EC67C); // Green for Donations
                           if (tag == "Announcement") tagColor = const Color(0xFF4E8BC6); // Blue for Classes
 
-                          final isLiked = likedPosts.contains(postId);
-                          final isSaved = savedPosts.contains(postId);
+                          //final isLiked = likedPosts.contains(postId);
+                          //final isSaved = savedPosts.contains(postId);
 
                           return GestureDetector(
                             onTap: () => Navigator.of(context).push(

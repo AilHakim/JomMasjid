@@ -440,7 +440,7 @@ class _LearnScreenState extends State<LearnScreen> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: kCategories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, i) {
           final cat = kCategories[i];
           final active = cat == _activeCategory;
@@ -553,7 +553,7 @@ class _CourseCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.8),
+                        color: AppColors.primary.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
@@ -755,7 +755,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha:0.2),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.chevron_left,
@@ -933,7 +933,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: unlocked ? Colors.white : Colors.white.withOpacity(0.6),
+        color: unlocked ? Colors.white : Colors.white.withValues(alpha:0.6),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(

@@ -504,10 +504,12 @@ class _MosqueScreenState extends State<MosqueScreen> {
         _isLoadingLocation = false;
       });
     } catch (e) {
+      if (mounted) {
       setState(() {
         _locationError = e.toString();
         _isLoadingLocation = false;
       });
+     }
     }
   }
 
