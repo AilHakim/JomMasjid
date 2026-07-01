@@ -11,6 +11,7 @@
 // Everything below is self-contained in one file.
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -680,7 +681,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       setState(() { _purchased = true; _loading = false; });
       return;
     }
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      setState(() { _loading = false; });
+      return;
+    }
     final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
         .collection('enrollments')
         .doc(widget.course.id.toString())
         .get();
@@ -690,7 +698,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   Future<void> _saveEnrollment() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
     await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
         .collection('enrollments')
         .doc(widget.course.id.toString())
         .set({'enrolledAt': FieldValue.serverTimestamp()});
