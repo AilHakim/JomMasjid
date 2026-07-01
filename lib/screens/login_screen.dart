@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../main.dart'; // To access your MasterScreen
-import '../admin_screens/admin_donation_screen.dart';
+import '../admin_screens/admin_master_screen.dart'; // To access your AdminMasterScreen
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -39,13 +39,13 @@ class _LoginScreenState extends State<LoginScreen> {
       
       // 2. Route based on the selected role!
       if (_isAdminSelected) {
-        // Route to Admin Page
+        // Route directly to the Admin Master Wrapper!
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const AdminDonationScreen()),
+          MaterialPageRoute(builder: (context) => const AdminMasterScreen()), 
         );
       } else {
-        // Route to Normal User Feed (MasterScreen)
+        // Route to Normal User Feed
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MasterScreen()),

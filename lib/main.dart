@@ -53,7 +53,7 @@ class _MasterScreenState extends State<MasterScreen> {
     const MosqueScreen(),
     const Center(child: Text('Prayer Page', style: TextStyle(fontSize: 24))),
     const Center(child: Text('Events Page', style: TextStyle(fontSize: 24))),
-    const Center(child: Text('Learn Page', style: TextStyle(fontSize: 24))),
+    const LearnScreen(),
     const DonationScreen(),
   ];
 
@@ -68,6 +68,9 @@ class _MasterScreenState extends State<MasterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       
+      appBar: AppBar(
+      title: const Text('Islamic Finance App'),
+      ),
       // 4. THE BODY: Display the page from the list that matches the selected index
       body: _pages[_selectedIndex], 
       
