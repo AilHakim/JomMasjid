@@ -40,10 +40,10 @@ class _AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
         'title': _titleController.text.trim(),
         'content': _contentController.text.trim(),
         'tag': _selectedTag,
-        
-        // If image field is empty, send null so the Feed's (image != null) check works
-        'image': _imageController.text.trim().isNotEmpty ? _imageController.text.trim() : null,
-        
+        // If image field is empty,
+        'image': _imageController.text.isNotEmpty 
+            ? _imageController.text 
+            : 'https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=600&q=80',
         'avatar': dynamicAvatar,
         'time': FieldValue.serverTimestamp(), // Firebase server time
         'likes': 0,
@@ -90,19 +90,26 @@ class _AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF242424)),
         actions: [
-          // Profile Picture
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.0),
-            child: CircleAvatar(
-              radius: 18,
-              backgroundImage: NetworkImage('https://raw.githubusercontent.com/AilHakim/jom-masjid-assets/main/images/profile_image/IMG_0426.PNG'),
-            ),
-          ),
-          // Logout Menu
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.menu, color: Color(0xFF242424)),
-            onSelected: (value) async {
-              if (value == 'logout') {
+          GestureDetector(
+            onTap: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text('Log Out'),
+                  content: const Text('Are you sure you want to log out?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Log Out', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) {
                 await FirebaseAuth.instance.signOut();
                 if (!context.mounted) return;
                 Navigator.pushAndRemoveUntil(
@@ -112,20 +119,14 @@ class _AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
                 );
               }
             },
-            itemBuilder: (BuildContext context) => [
-              const PopupMenuItem(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Log Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                  ],
-                ),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: CircleAvatar(
+                radius: 18,
+                backgroundImage: NetworkImage('https://raw.githubusercontent.com/AilHakim/jom-masjid-assets/main/images/profile_image/IMG_0426.PNG'),
               ),
-            ],
+            ),
           ),
-          const SizedBox(width: 8),
         ],
       ),
       body: _isLoading
@@ -165,7 +166,7 @@ class _AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
                       fillColor: Colors.white,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                     ),
-                    items: <String>['Announcement', 'Event', 'Donation', 'Learning']
+                    items: <String>['Announcement', 'Event']
                         .map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,

@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Add this import!
+import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -16,25 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   
   // 1. Updated filters
   String activeFilter = "All"; // Set default to 'All'
-  final List<String> filters = ["All", "Donations", "Events"];
-
-  // Dummy Story Data (Kept exactly as you liked it)
-  final List<Map<String, dynamic>> stories = [
-    {
-      "id": 1,
-      "name": "Al-Hidayah",
-      "image": "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=100&q=80",
-      "storyImage": "https://images.unsplash.com/photo-1519817650390-2c24b4c29e20?w=600&q=80",
-      "hasUpdate": true
-    },
-    {
-      "id": 2,
-      "name": "Masjid Omar",
-      "image": "https://images.unsplash.com/photo-1542931287-023b922fa89b?w=100&q=80",
-      "storyImage": "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=600&q=80",
-      "hasUpdate": true
-    },
-  ];
+  final List<String> filters = ["All", "Announcements", "Events"];
 
   void toggleLike(String id) {
     setState(() {
@@ -48,17 +32,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void openStory(Map<String, dynamic> story) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => StoryViewerScreen(story: story),
-      ),
-    );
-    setState(() {
-      story['hasUpdate'] = false;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             // Header Section
             Container(
+              height: 80,
               color: const Color(0xFFF9F2ED),
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
               child: Column(
@@ -78,14 +52,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: const [
-                          Text("Assalamualaikum 👋", style: TextStyle(color: Color(0xFF909090), fontSize: 12, fontFamily: 'Urbanist')),
-                          Text("Ahmad Rizwan", style: TextStyle(color: Color(0xFF242424), fontSize: 20, fontWeight: FontWeight.w700, fontFamily: 'Sora')),
+                          Text("Assalamualaikum yoww👋", style: TextStyle(color: Color(0xFF909090), fontSize: 12, fontFamily: 'Urbanist')),
+                          Text("Ail Hakim", style: TextStyle(color: Color(0xFF242424), fontSize: 20, fontWeight: FontWeight.w700, fontFamily: 'Sora')),
                         ],
                       ),
                       Row(
                         children: [
                           Stack(
-                            children: [
+                            /*children: [ //maleh pakais
                               Container(
                                 width: 36, height: 36,
                                 decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2)]),
@@ -98,22 +72,52 @@ class _HomeScreenState extends State<HomeScreen> {
                                   decoration: BoxDecoration(color: const Color(0xFFC67C4E), shape: BoxShape.circle, border: Border.all(color: const Color(0xFFF9F2ED), width: 2)),
                                 ),
                               ),
-                            ],
+                            ],*/
                           ),
                           const SizedBox(width: 12),
-                          Container(
-                            width: 36, height: 36,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: const Color(0xFFC67C4E), width: 2),
-                              image: const DecorationImage(image: NetworkImage("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80"), fit: BoxFit.cover),
+                          GestureDetector(
+                            onTap: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                  title: const Text('Log Out'),
+                                  content: const Text('Are you sure you want to log out?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, true),
+                                      child: const Text('Log Out', style: TextStyle(color: Colors.red)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true) {
+                                await FirebaseAuth.instance.signOut();
+                                if (!context.mounted) return;
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                  (route) => false,
+                                );
+                              }
+                            },
+                            child: Container(
+                              width: 36, height: 36,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: const Color(0xFFC67C4E), width: 2),
+                                image: const DecorationImage(image: NetworkImage("https://raw.githubusercontent.com/AilHakim/jom-masjid-assets/main/images/profile_image/IMG_0426.PNG"), fit: BoxFit.cover),
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  //const SizedBox(height: 16),
                   // Search Bar
                   /*Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -141,11 +145,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.only(bottom: 24),
                 children: [
                   // Stories Section
-                  Padding(
+                  /*Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
+                      /*children: [
                         const Text("Following", style: TextStyle(color: Color(0xFF242424), fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'Sora')),
                         GestureDetector(
                           onTap: () {},
@@ -156,13 +160,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
-                      ],
+                      ],*/
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 12),*/
                   
                   // Horizontal Story Bar
-                  SizedBox(
+                  /*SizedBox(
                     height: 85,
                     child: ShaderMask(
                       shaderCallback: (Rect bounds) {
@@ -174,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ).createShader(bounds);
                       },
                       blendMode: BlendMode.dstOut,
-                      child: ListView.builder(
+                      /*child: ListView.builder(
                         physics: const BouncingScrollPhysics(),
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -225,10 +229,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           );
                         },
-                      ),
+                      ),*/
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 12),*/
 
                   // Filter Pills (Now only shows 'Events')
                   SizedBox(
@@ -267,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   // NEW: Real-time Firebase Feed with Filtering
                   // ==========================================
                   StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance.collection('announcement').snapshots(),
+                    stream: FirebaseFirestore.instance.collection('announcements').snapshots(),
                     builder: (context, snapshot) {
                       
                       if (snapshot.hasError) {
@@ -296,7 +300,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         // Match the tab name to the exact tag saved in Firebase
                         if (activeFilter == "Events" && tag == "Event") return true;
-                        if (activeFilter == "Donations" && tag == "Donation") return true;
+                        if (activeFilter == "Announcements" && tag == "Announcement") return true;
                         
                         return false; // Hide it if it doesn't match
                       }).toList();
@@ -362,13 +366,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
                           // Color-code the tag dynamically
                           Color tagColor = const Color(0xFFC67C4E); // Default Orange for Events
-                          if (tag == "Donation") tagColor = const Color(0xFF4EC67C); // Green for Donations
-                          if (tag == "Learning") tagColor = const Color(0xFF4E8BC6); // Blue for Classes
+                          if (tag == "Event") tagColor = const Color(0xFF4EC67C); // Green for Donations
+                          if (tag == "Announcement") tagColor = const Color(0xFF4E8BC6); // Blue for Classes
 
                           final isLiked = likedPosts.contains(postId);
                           final isSaved = savedPosts.contains(postId);
 
-                          return Container(
+                          return GestureDetector(
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => PostDetailScreen(
+                                  mosque: mosque,
+                                  location: location,
+                                  time: time,
+                                  title: title,
+                                  content: content,
+                                  avatar: avatar,
+                                  tag: tag,
+                                  tagColor: tagColor,
+                                  image: image,
+                                  likes: likes,
+                                  comments: comments,
+                                ),
+                              ),
+                            ),
+                            child: Container(
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(24),
@@ -429,10 +451,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 // Actions
-                                Container(
+                                /*Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                   decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFF6EBE4)))),
-                                  child: Row(
+                                  /*child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Row(
@@ -448,13 +470,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                           ),
                                           const SizedBox(width: 16),
-                                          Row(
+                                          /*Row(
                                             children: [
                                               const Icon(Icons.chat_bubble_outline, size: 18, color: Color(0xFF909090)),
                                               const SizedBox(width: 6),
                                               Text("$comments", style: const TextStyle(color: Color(0xFF909090), fontSize: 12, fontFamily: 'Urbanist')),
                                             ],
-                                          ),
+                                          ),*/
                                           const SizedBox(width: 16),
                                           const Icon(Icons.share_outlined, size: 18, color: Color(0xFF909090)),
                                         ],
@@ -464,9 +486,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                         child: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border, size: 20, color: isSaved ? const Color(0xFFC67C4E) : const Color(0xFF909090)),
                                       ),
                                     ],
-                                  ),
-                                ),
+                                  ),*/
+                                ),*/
                               ],
+                            ),
                             ),
                           );
                         },
@@ -481,89 +504,88 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// Ensure the StoryViewerScreen from earlier is included at the bottom of the file
-class StoryViewerScreen extends StatefulWidget {
-  final Map<String, dynamic> story;
-  const StoryViewerScreen({Key? key, required this.story}) : super(key: key);
+class PostDetailScreen extends StatelessWidget {
+  final String mosque, location, time, title, content, avatar, tag;
+  final Color tagColor;
+  final String? image;
+  final int likes, comments;
 
-  @override
-  State<StoryViewerScreen> createState() => _StoryViewerScreenState();
-}
-
-class _StoryViewerScreenState extends State<StoryViewerScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(vsync: this, duration: const Duration(seconds: 5));
-    _animationController.forward();
-    _animationController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        Navigator.of(context).pop();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
+  const PostDetailScreen({
+    super.key,
+    required this.mosque,
+    required this.location,
+    required this.time,
+    required this.title,
+    required this.content,
+    required this.avatar,
+    required this.tag,
+    required this.tagColor,
+    required this.image,
+    required this.likes,
+    required this.comments,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: GestureDetector(
-        onTapDown: (_) => _animationController.stop(),
-        onTapUp: (_) => _animationController.forward(),
-        onVerticalDragEnd: (details) {
-          if (details.primaryVelocity! > 0) Navigator.of(context).pop(); 
-        },
-        child: Stack(
+      backgroundColor: const Color(0xFFF9F2ED),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF242424)),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Image.network(
-                widget.story['storyImage'] ?? widget.story['image'],
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-              ),
-            ),
-            SafeArea(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
-                    child: AnimatedBuilder(
-                      animation: _animationController,
-                      builder: (context, child) {
-                        return LinearProgressIndicator(
-                          value: _animationController.value,
-                          backgroundColor: Colors.white.withOpacity(0.3),
-                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                          minHeight: 2.5,
-                          borderRadius: BorderRadius.circular(10),
-                        );
-                      },
-                    ),
+            // Header
+            Row(
+              children: [
+                CircleAvatar(radius: 22, backgroundImage: NetworkImage(avatar)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(mosque, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, fontFamily: 'Sora')),
+                      Text('$location · $time', style: const TextStyle(color: Colors.grey, fontSize: 12, fontFamily: 'Urbanist')),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      children: [
-                        CircleAvatar(radius: 18, backgroundImage: NetworkImage(widget.story['image'])),
-                        const SizedBox(width: 10),
-                        Text(widget.story['name'], style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'Sora')),
-                        const Spacer(),
-                        IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.of(context).pop())
-                      ],
-                    ),
-                  )
-                ],
-              ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: tagColor, borderRadius: BorderRadius.circular(12)),
+                  child: Text(tag, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600, fontFamily: 'Urbanist')),
+                ),
+              ],
             ),
+            const SizedBox(height: 20),
+            // Image
+            if (image != null && image!.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.network(image!, width: double.infinity, fit: BoxFit.cover),
+              ),
+            if (image != null && image!.isNotEmpty) const SizedBox(height: 20),
+            // Title
+            Text(title, style: const TextStyle(color: Color(0xFF242424), fontWeight: FontWeight.w700, fontSize: 18, fontFamily: 'Sora')),
+            const SizedBox(height: 12),
+            // Content
+            Text(content, style: const TextStyle(color: Color(0xFF909090), fontSize: 14, height: 1.7, fontFamily: 'Urbanist')),
+            const SizedBox(height: 24),
+            // Stats
+            /*Row(
+              children: [
+                const Icon(Icons.favorite_border, size: 18, color: Color(0xFF909090)),
+                const SizedBox(width: 6),
+                Text('$likes', style: const TextStyle(color: Color(0xFF909090), fontSize: 13, fontFamily: 'Urbanist')),
+                const SizedBox(width: 16),
+                const Icon(Icons.chat_bubble_outline, size: 18, color: Color(0xFF909090)),
+                const SizedBox(width: 6),
+                Text('$comments', style: const TextStyle(color: Color(0xFF909090), fontSize: 13, fontFamily: 'Urbanist')),
+              ],
+            ),*/
           ],
         ),
       ),
