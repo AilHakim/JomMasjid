@@ -13,8 +13,8 @@
 
 | Field | Details |
 |-------|---------|
-| **Group Name** | `[Your Group Name]` |
-| **Repository** | `[Public GitHub Repository URL]` |
+| **Group Name** | `Fah` |
+| **Repository** | `github.com/AilHakim/JomMasjid` |
 | **Platform** | Android (Flutter) |
 | **Back End as a Service** | Firebase (Authentication + Cloud Firestore) |
 
@@ -26,14 +26,12 @@ responsibility. Adjust names, matric numbers, and the split to match your group.
 
 | No. | Name | Matric No. | Assigned Module / Tasks |
 |-----|------|-----------|--------------------------|
-| 1 | `[Member 1 — Leader]` | `[Matric No.]` | Authentication & Login (`login_screen.dart`), User/Admin routing, GitHub repo & merge management |
-| 2 | `[Member 2]` | `[Matric No.]` | Home Feed & Announcements (`feed.dart`, `admin_announcement.dart`) |
-| 3 | `[Member 3]` | `[Matric No.]` | Islamic Learning module (`learn.dart`) — courses, enrollment |
-| 4 | `[Member 4]` | `[Matric No.]` | Mosque Finder (`mosques.dart`) — Google Places API integration |
+| 1 | `[All of Us — Leader]` | `[Matric No.]` | Authentication & Login (`login_screen.dart`), User/Admin routing, GitHub repo & merge management |
+| 2 | `[Muhammad Ail Hakim bin Othman]` | `[2312457]` | Home Feed & Announcements (`feed.dart`, `admin_announcement.dart`) |
+| 3 | `Nabil Amri bin Mohd Redzuan` | `2212011` | Islamic Learning module (`learn.dart`) — courses, enrollment |
+| 4 | `[Muhammad Adib bin Ahmad Jefiruddin]` | `[2319175]` | Mosque Finder (`mosques.dart`) — Google Places API integration |
 | 5 | `[Member 5]` | `[Matric No.]` | Donation module (`donation_screen.dart`, `admin_donation_screen.dart`) |
 
-> If your group has fewer members, merge modules evenly (e.g. Feed + Auth) so the
-> workload stays balanced, as required by the project instructions.
 
 ---
 
@@ -90,120 +88,205 @@ architecture is portable to iOS with minimal change.
 ## 3. Requirement Analysis & Planning
 
 ### 3.1 Technical Feasibility & Back-End Assessment
-The application is technically feasible using free-tier tooling suitable for a
-student project:
+The proposed **JomMasjid** mobile application is technically feasible as a student project by leveraging Flutter together with Firebase's cloud services and external location APIs. The application adopts a Backend-as-a-Service (BaaS) architecture, reducing the need for server-side infrastructure while providing scalable authentication and cloud data storage.
 
-- **Back End as a Service:** Firebase is used for **Authentication** (email/password
-  with role-based routing) and **Cloud Firestore** for all CRUD operations.
-- **CRUD data storage (Cloud Firestore collections):**
+### Technologies Used
 
-  | Collection | Create | Read | Update | Delete |
-  |------------|--------|------|--------|--------|
-  | `users` | Register user + role | Load profile & role on login | Edit profile | Remove account |
-  | `announcements` | Admin posts | Feed listing | Admin edits | Admin deletes |
-  | `courses` | Seed catalogue | Learn listing & detail | Update lessons | Remove course |
-  | `enrollments` | User enrols | Show enrolled courses | — | Unenroll |
-  | `donationCampaigns` | Admin creates | Donation listing | Admin edits target/status | Admin closes |
-  | `donations` | User contributes | Campaign progress | — | — |
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| Front End | Flutter (Dart) | Cross-platform mobile application development |
+| Authentication | Firebase Authentication | Email and password authentication |
+| Database | Cloud Firestore | Cloud NoSQL database for application data |
+| Maps & Location | OpenStreetMap Overpass API | Retrieve nearby mosques based on user location |
+| Mosque Details | Google Places API (New) | Retrieve detailed mosque information |
 
-- **External API:** Google **Places API (New)** — a `POST` to
-  `places:searchNearby` returns mosque data (rating, review count, address,
-  photos) filtered by the `mosque` place type within a geographic radius.
+### Cloud Firestore Collections (CRUD)
 
-### 3.2 Platform Compatibility
-The app targets Android smartphones and adapts to varying screen sizes using
-Flutter's responsive widgets (`Expanded`, `Flexible`, `MediaQuery`) and
-`SafeArea` for notch/status-bar handling. The layout scales gracefully to larger
-screens and is portable to wearables/iOS with the same widget tree.
+| Collection | Create | Read | Update | Delete |
+|------------|--------|------|--------|--------|
+| `announcements` | Admin creates announcements | Display announcement feed | Admin edits announcements | Admin deletes announcements |
+| `donationCampaigns` | Admin creates donation campaigns | Display campaign list | Admin updates campaign information | Admin deletes campaigns |
+| `donations` | User submits donation | Display donation records and campaign progress | Update campaign total after donation | — |
+| `courses` | Admin seeds learning content | Display course catalogue | Update course information | Remove course |
 
-### 3.3 Logical Design
+### Authentication
 
-**Screen Navigation Flow**
+Firebase Authentication is used to securely authenticate users using their email address and password. Upon successful authentication, the application navigates users to either the **User** interface or the **Admin** interface based on the login mode selected on the login screen.
+
+### Mosque Information Retrieval
+
+The mosque module uses a hybrid API approach:
+
+- **OpenStreetMap Overpass API** retrieves nearby mosques based on the user's GPS location.
+- **Google Places API (New)** retrieves detailed information such as:
+  - Ratings
+  - Number of reviews
+  - Address
+  - Opening hours
+  - Contact number
+  - Website
+  - Photos
+
+---
+## 3.2 Platform Compatibility
+
+The application is developed using **Flutter**, allowing deployment on Android devices while maintaining portability to other platforms such as iOS with minimal modification.
+
+Responsive user interfaces are implemented using Flutter widgets including:
+
+- `Expanded`
+- `Flexible`
+- `MediaQuery`
+- `SafeArea`
+
+These widgets ensure the application adapts well to different screen sizes, resolutions, and devices.
+
+---
+## 3.3 Logical Design
+
+### Screen Navigation Flow
 
 ```mermaid
 flowchart TD
-    A[App Launch] --> B[Login Screen]
-    B -->|User login| C[User MasterScreen — Bottom Nav]
-    B -->|Admin login| D[Admin MasterScreen — Bottom Nav]
 
-    C --> E[Feed]
-    C --> F[Mosques]
-    C --> G[Prayer]
-    C --> H[Events]
-    C --> I[Learn]
-    C --> J[Donations]
+A[Application Launch]
+A --> B[Login Screen]
 
-    I --> I2[Course Detail — Lessons + Enrol]
-    F --> F2[Mosque Detail]
+B --> C{Login Mode}
 
-    D --> K[Post Announcement]
-    D --> L[Create Donation Campaign]
-    D --> M[Manage Feed]
+C -->|User| D[User Master Screen]
+C -->|Admin| E[Admin Master Screen]
+
+D --> F[Feed]
+D --> G[Mosques]
+D --> H[Learn]
+D --> I[Donations]
+
+G --> G1[Mosque Details]
+H --> H1[Course Details]
+
+E --> J[Manage Announcements]
+E --> K[Manage Donation Campaigns]
 ```
 
-**Sequence Diagram — Authentication & Role Routing**
+---
+
+### Sequence Diagram — User Authentication
 
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant App as JomMasjid App
-    participant Auth as Firebase Auth
-    participant DB as Cloud Firestore
 
-    U->>App: Enter email & password
-    App->>Auth: signInWithEmailAndPassword()
-    Auth-->>App: UserCredential / AuthError
-    App->>DB: Read users/{uid} role
-    DB-->>App: role = "user" | "admin"
-    App-->>U: Route to User or Admin MasterScreen
+participant User
+participant App
+participant Firebase
+
+User->>App: Select User/Admin mode
+User->>App: Enter email & password
+
+App->>Firebase: signInWithEmailAndPassword()
+
+alt Authentication Successful
+    Firebase-->>App: UserCredential
+
+    alt User Mode
+        App-->>User: Open User Master Screen
+    else Admin Mode
+        App-->>User: Open Admin Master Screen
+    end
+
+else Authentication Failed
+    Firebase-->>App: Authentication Error
+    App-->>User: Display Error Message
+end
 ```
 
-**Sequence Diagram — Donation (CRUD example)**
+---
+
+### Sequence Diagram — Donation Process
 
 ```mermaid
 sequenceDiagram
-    participant Admin
-    participant App as JomMasjid App
-    participant DB as Cloud Firestore
-    participant U as User
 
-    Admin->>App: Create campaign (title, target)
-    App->>DB: donationCampaigns.add()  %% Create
-    U->>App: Open Donations tab
-    App->>DB: donationCampaigns.get()  %% Read
-    DB-->>App: Active campaigns
-    U->>App: Contribute RM amount
-    App->>DB: donations.add() + update raised  %% Create + Update
-    DB-->>App: Success
-    App-->>U: Confirmation + updated progress
+participant Admin
+participant App
+participant Firestore
+participant User
+
+Admin->>App: Create Donation Campaign
+App->>Firestore: Create campaign document
+Firestore-->>App: Campaign saved
+
+User->>App: Open Donations Screen
+App->>Firestore: Retrieve active campaigns
+Firestore-->>App: Campaign list
+
+User->>App: Submit donation
+App->>Firestore: Create donation record
+App->>Firestore: Update campaign total
+
+Firestore-->>App: Update successful
+App-->>User: Display updated campaign progress
+```
+
+---
+
+### System Architecture
+
+```mermaid
+flowchart LR
+
+User((User))
+Admin((Admin))
+
+User --> Flutter
+Admin --> Flutter
+
+Flutter --> FirebaseAuth[Firebase Authentication]
+Flutter --> Firestore[(Cloud Firestore)]
+
+Flutter --> OSM[OpenStreetMap Overpass API]
+Flutter --> GooglePlaces[Google Places API]
+
+FirebaseAuth --> Flutter
+Firestore --> Flutter
+OSM --> Flutter
+GooglePlaces --> Flutter
 ```
 
 ### 3.4 Project Planning — Gantt Chart
 
-> Start date is today; **replace the presentation date with your actual date**.
-
 ```mermaid
 gantt
-    title JomMasjid Development Timeline
+    title JomMasjid Development Timeline (Semester Project)
     dateFormat  YYYY-MM-DD
     axisFormat  %d %b
 
     section Initiation
-    Ideation & proposal            :done,   a1, 2026-07-01, 3d
+    Project ideation & proposal          :done, a1, 2026-03-16, 1w
+    Problem definition & objectives       :done, a2, 2026-03-23, 1w
+
     section Requirement Analysis
-    Feasibility & data modelling   :active, a2, 2026-07-04, 3d
-    Navigation & sequence design   :        a3, 2026-07-07, 3d
+    Feasibility & back-end assessment     :done, b1, 2026-03-30, 1w
+    Firestore data modelling              :done, b2, 2026-04-06, 1w
+    Navigation & sequence design          :done, b3, 2026-04-06, 1w
+
     section Design
-    UI/UX & design system          :        a4, 2026-07-10, 4d
+    UI/UX wireframes                      :done, c1, 2026-04-13, 1w
+    Design system (colours & fonts)       :done, c2, 2026-04-20, 1w
+
     section Development
-    Auth + Firebase setup          :        a5, 2026-07-14, 3d
-    Feed & announcements           :        a6, 2026-07-14, 4d
-    Learn & Mosque finder          :        a7, 2026-07-16, 4d
-    Donations & admin tools        :        a8, 2026-07-18, 4d
+    Firebase setup & Authentication       :done, d1, 2026-04-27, 2w
+    Home Feed & Announcements             :done, d2, 2026-05-04, 2w
+    Islamic Learning module               :done, d3, 2026-05-11, 2w
+    Mosque Finder (Places API)            :done, d4, 2026-05-18, 2w
+    Donations & Admin tools               :done, d5, 2026-05-25, 2w
+    Firestore CRUD integration            :done, d6, 2026-06-08, 1w
+
     section Testing & Delivery
-    Integration & validation       :        a9, 2026-07-22, 3d
-    Presentation prep              :        a10, 2026-07-25, 2d
-    Group Presentation             :milestone, m1, 2026-07-27, 0d
+    Integration & input validation        :done, e1, 2026-06-15, 1w
+    Bug fixing & UI polish                 :done, e2, 2026-06-22, 1w
+    Documentation & README                 :done, e3, 2026-06-29, 4d
+    Group Presentation                     :milestone, m1, 2026-07-02, 0d
 ```
 
 ---
@@ -285,7 +368,6 @@ testable and independently maintainable.
 | `google_fonts` | Sora & Urbanist typography |
 | `http` | Google Places API (New) requests |
 
-> Confirm the exact versions against your `pubspec.yaml` before submission.
 
 **Error checking & input validation:**
 - Login form validates email format and non-empty password before submission.
