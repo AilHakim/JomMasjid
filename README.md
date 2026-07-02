@@ -14,7 +14,7 @@
 | Field | Details |
 |-------|---------|
 | **Group Name** | `Fah` |
-| **Repository** | `[Public GitHub Repository URL]` |
+| **Repository** | `github.com/AilHakim/JomMasjid` |
 | **Platform** | Android (Flutter) |
 | **Back End as a Service** | Firebase (Authentication + Cloud Firestore) |
 
