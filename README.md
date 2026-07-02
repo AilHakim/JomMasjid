@@ -9,10 +9,7 @@
 
 ---
 
-> ⚠️ **Before submitting, fill in the placeholders marked `[ ... ]`:**
-> group name, member names & matric numbers, the per-member task table,
-> your actual presentation date in the Gantt chart, and your public GitHub
-> repository URL. Everything else is drafted and ready.
+
 
 ---
 
