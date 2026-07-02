@@ -9,10 +9,6 @@
 
 ---
 
-
-
----
-
 ## 1. Group Information
 
 | Field | Details |
