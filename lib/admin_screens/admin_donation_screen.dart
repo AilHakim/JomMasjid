@@ -30,7 +30,7 @@ class _AdminDonationScreenState extends State<AdminDonationScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // 2. Add a completely new document to the 'donations' collection
+      // 2. Add new document to the donations collection
       await FirebaseFirestore.instance.collection('donations').add({
         'title': _titleController.text,
         'mosque': _mosqueController.text,
@@ -51,7 +51,7 @@ class _AdminDonationScreenState extends State<AdminDonationScreen> {
         const SnackBar(content: Text("Campaign Added Successfully!", style: TextStyle(color: Colors.white))),
       );
       
-      // 3. Clear the form so they can add another one
+      // 3. Clear the form so admin can add another one
       _titleController.clear();
       _mosqueController.clear();
       _descController.clear();
@@ -80,7 +80,7 @@ class _AdminDonationScreenState extends State<AdminDonationScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF242424)),
         
-        // ADD THESE ACTIONS FOR THE PROFILE & LOGOUT
+        //  PROFILE & LOGOUT 
         actions: [
           GestureDetector(
             onTap: () async {
@@ -161,7 +161,7 @@ class _AdminDonationScreenState extends State<AdminDonationScreen> {
     );
   }
 
-  // Helper widget
+  // FormField consistency
   Widget _buildTextField(TextEditingController controller, String hint, {bool isNumber = false, int maxLines = 1, bool isRequired = true}) {
     return TextFormField(
       controller: controller,
