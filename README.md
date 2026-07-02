@@ -178,7 +178,6 @@ sequenceDiagram
 
 ### 3.4 Project Planning — Gantt Chart
 
-> Start date is today; **replace the presentation date with your actual date**.
 
 ```mermaid
 gantt
