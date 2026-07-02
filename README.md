@@ -28,7 +28,7 @@ responsibility. Adjust names, matric numbers, and the split to match your group.
 |-----|------|-----------|--------------------------|
 | 1 | `[All of Us — Leader]` | `[Matric No.]` | Authentication & Login (`login_screen.dart`), User/Admin routing, GitHub repo & merge management |
 | 2 | `[Muhammad Ail Hakim bin Othman]` | `[2312457]` | Home Feed & Announcements (`feed.dart`, `admin_announcement.dart`) |
-| 3 | `[Member 3]` | `[Matric No.]` | Islamic Learning module (`learn.dart`) — courses, enrollment |
+| 3 | `Nabil Amri bin Mohd Redzuan` | `2212011` | Islamic Learning module (`learn.dart`) — courses, enrollment |
 | 4 | `[Muhammad Adib bin Ahmad Jefiruddin]` | `[2319175]` | Mosque Finder (`mosques.dart`) — Google Places API integration |
 | 5 | `[Member 5]` | `[Matric No.]` | Donation module (`donation_screen.dart`, `admin_donation_screen.dart`) |
 
