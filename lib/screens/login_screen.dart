@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../main.dart'; // To access your MasterScreen
-import '../admin_screens/admin_master_screen.dart'; // To access your AdminMasterScreen
+import '../main.dart'; // To access  MasterScreen
+import '../admin_screens/admin_master_screen.dart'; // To access  AdminMasterScreen
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -87,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // --- CUSTOM ROLE TOGGLE ---
+                // CUSTOM ROLE TOGGLE 
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
@@ -184,7 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // --- SUBMIT BUTTON ---
+                //  SUBMIT BUTTON 
                 ElevatedButton(
                   onPressed: _isLoading ? null : signIn,
                   style: ElevatedButton.styleFrom(

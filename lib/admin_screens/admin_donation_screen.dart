@@ -80,7 +80,7 @@ class _AdminDonationScreenState extends State<AdminDonationScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF242424)),
         
-        // --- ADD THESE ACTIONS FOR THE PROFILE & LOGOUT ---
+        // ADD THESE ACTIONS FOR THE PROFILE & LOGOUT
         actions: [
           GestureDetector(
             onTap: () async {

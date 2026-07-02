@@ -1,66 +1,4 @@
-// mosque_screen.dart
-//
-// Flutter port of the React "Nearby Mosques" screen.
-//
-// HYBRID DATA STRATEGY:
-//   - The nearby LIST uses OpenStreetMap's free Overpass API to discover
-//     mosque locations (no API key, no cost, but sparse contact details).
-//   - The DETAIL screen, once a mosque is tapped, enriches that single
-//     result with the Google Places API (phone, website, formatted
-//     address, real opening-hours status, rating) — this keeps API usage
-//     (and cost) limited to mosques people actually open, instead of
-//     paying for every mosque in the list on every search.
-//
-// --- pubspec.yaml dependencies you'll need ---
-//   dependencies:
-//     flutter:
-//       sdk: flutter
-//     geolocator: ^14.0.3
-//     google_fonts: ^6.2.1     # for Sora / Urbanist, optional but matches the design
-//     url_launcher: ^6.3.0     # for the "Get Directions" button
-//     http: ^1.2.0             # for querying Overpass + Google Places
-//
-// --- Google Places API setup ---
-//   1. In Google Cloud Console, create/select a project, enable the
-//      "Places API" (the older Places API, not Places API (New) unless you
-//      adjust the endpoints below), and create an API key.
-//   2. Restrict the key (Android app / iOS bundle restriction recommended)
-//      so it can't be abused if extracted from the app binary.
-//   3. Paste it into GooglePlacesService.apiKey below.
-//   4. Google Places has a monthly free credit, then pay-as-you-go pricing
-//      — Find Place + Place Details together cost a small amount per
-//      mosque a user actually opens. Keep an eye on usage in Cloud Console.
-//   5. For production, consider proxying these calls through your own
-//      backend so the key isn't shipped inside the public app binary.
-//
-// --- Android: add to android/app/src/main/AndroidManifest.xml ---
-//   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-//   <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-//   <uses-permission android:name="android.permission.INTERNET"/>
-//
-//   Also add this as a SIBLING of <application>, inside <manifest>, so the
-//   "Get Directions" button can actually launch Google Maps. Without this,
-//   canLaunchUrl()/launchUrl() silently fail on Android 11+ due to package
-//   visibility restrictions:
-//
-//   <queries>
-//     <intent>
-//       <action android:name="android.intent.action.VIEW" />
-//       <data android:scheme="https" />
-//     </intent>
-//     <intent>
-//       <action android:name="android.intent.action.VIEW" />
-//       <data android:scheme="geo" />
-//     </intent>
-//     <intent>
-//       <action android:name="android.intent.action.VIEW" />
-//       <data android:scheme="tel" />
-//     </intent>
-//   </queries>
-//
-// --- iOS: add to ios/Runner/Info.plist ---
-//   <key>NSLocationWhenInUseUsageDescription</key>
-//   <string>This app needs your location to find mosques near you.</string>
+
 
 import 'dart:async';
 import 'dart:convert';
@@ -71,9 +9,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
-// ─────────────────────────────────────────────────────────────────────────
+
 // Color palette (mirrors the hex values used in the original Tailwind code)
-// ─────────────────────────────────────────────────────────────────────────
+
 class AppColors {
   static const background = Color(0xFFF9F2ED);
   static const accent = Color(0xFFC67C4E);
@@ -95,9 +33,8 @@ TextStyle sora({double size = 14, FontWeight weight = FontWeight.w600, Color? co
 TextStyle urbanist({double size = 13, FontWeight weight = FontWeight.w400, Color? color}) =>
     GoogleFonts.urbanist(fontSize: size, fontWeight: weight, color: color ?? AppColors.textSecondary);
 
-// ─────────────────────────────────────────────────────────────────────────
+
 // Models
-// ─────────────────────────────────────────────────────────────────────────
 class Mosque {
   final int id;
   final String name;
@@ -143,9 +80,7 @@ class Mosque {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────
 // Location service — wraps the geolocator package
-// ─────────────────────────────────────────────────────────────────────────
 class LocationService {
   static Future<Position> determinePosition() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -282,9 +217,9 @@ class LocationService {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────
+
 // Google Places enrichment
-// ─────────────────────────────────────────────────────────────────────────
+
 class GooglePlacesService {
   // Paste your real Google Places API key between the quotes below.
   static const String apiKey = 'AIzaSyBslxkYjFUH9dLhfQbQV7Nunx2PMUcFkOI';
@@ -428,9 +363,8 @@ class GooglePlacesService {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────
+
 // Main screen
-// ─────────────────────────────────────────────────────────────────────────
 class MosqueScreen extends StatefulWidget {
   const MosqueScreen({super.key});
 
@@ -736,9 +670,7 @@ class _MosqueScreenState extends State<MosqueScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────
 // Mosque list card
-// ─────────────────────────────────────────────────────────────────────────
 class MosqueCard extends StatelessWidget {
   final Mosque mosque;
   final VoidCallback onTap;
@@ -846,9 +778,7 @@ class MosqueCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────
 // Detail screen
-// ─────────────────────────────────────────────────────────────────────────
 class MosqueDetailScreen extends StatefulWidget {
   final Mosque mosque;
   const MosqueDetailScreen({super.key, required this.mosque});
@@ -1261,9 +1191,8 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────
 // Reusable contact row — supports optional underline for clickable rows
-// ─────────────────────────────────────────────────────────────────────────
+
 class _ContactRow extends StatelessWidget {
   final IconData icon;
   final String text;

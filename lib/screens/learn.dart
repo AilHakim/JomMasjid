@@ -1,23 +1,9 @@
-// learn_screen.dart
-//
-// Flutter port of the React "LearnScreen" component (Islamic Learning app).
-//
-// Setup:
-//   1. Add to pubspec.yaml dependencies:
-//        google_fonts: ^6.2.1
-//   2. Make sure your device/emulator has internet (course images load from network).
-//   3. Drop `const LearnScreen()` into your app, e.g. as a tab body or a route.
-//
-// Everything below is self-contained in one file.
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// ---------------------------------------------------------------------------
 // Colour palette (mirrors the hex values from the React/Tailwind version)
-// ---------------------------------------------------------------------------
 class AppColors {
   static const background = Color(0xFFF9F2ED);
   static const primary = Color(0xFFC67C4E);
@@ -29,9 +15,7 @@ class AppColors {
   static const border = Color(0xFFE5E5E5);
 }
 
-// ---------------------------------------------------------------------------
 // Models
-// ---------------------------------------------------------------------------
 class CourseVideo {
   final String title;
   final String duration;
@@ -80,9 +64,7 @@ class Course {
   });
 }
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 const List<String> kCategories = [
   'All',
   'Fiqh',
@@ -190,9 +172,7 @@ const List<Course> kCourses = [
   ),
 ];
 
-// ---------------------------------------------------------------------------
 // Helpers
-// ---------------------------------------------------------------------------
 /// Equivalent of JS `Number.toLocaleString()` for thousands separators.
 String formatNumber(int n) {
   return n.toString().replaceAllMapped(

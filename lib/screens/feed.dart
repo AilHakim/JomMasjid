@@ -58,20 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         children: [
                           Stack(
-                            /*children: [ //maleh pakais
-                              Container(
-                                width: 36, height: 36,
-                                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2)]),
-                                child: const Icon(Icons.notifications_outlined, size: 20, color: Color(0xFF242424)),
-                              ),
-                              Positioned(
-                                top: 0, right: 0,
-                                child: Container(
-                                  width: 12, height: 12,
-                                  decoration: BoxDecoration(color: const Color(0xFFC67C4E), shape: BoxShape.circle, border: Border.all(color: const Color(0xFFF9F2ED), width: 2)),
-                                ),
-                              ),
-                            ],*/
+                        
                           ),
                           const SizedBox(width: 12),
                           GestureDetector(
@@ -116,23 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                  //const SizedBox(height: 16),
-                  // Search Bar
-                  /*Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2, offset: Offset(0, 1))],
-                    ),
-                    child: Row(
-                      children: const [
-                        Icon(Icons.search, size: 20, color: Color(0xFF909090)),
-                        SizedBox(width: 12),
-                        Text("Search mosques, events, classes...", style: TextStyle(color: Color(0xFF909090), fontSize: 14, fontFamily: 'Urbanist')),
-                      ],
-                    ),
-                  ),*/
+                 
                 ],
               ),
             ),
@@ -143,96 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.only(bottom: 24),
                 children: [
-                  // Stories Section
-                  /*Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      /*children: [
-                        const Text("Following", style: TextStyle(color: Color(0xFF242424), fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'Sora')),
-                        GestureDetector(
-                          onTap: () {},
-                          child: Row(
-                            children: const [
-                              Text("See all", style: TextStyle(color: Color(0xFFC67C4E), fontSize: 12, fontFamily: 'Urbanist')),
-                              Icon(Icons.chevron_right, size: 16, color: Color(0xFFC67C4E)),
-                            ],
-                          ),
-                        ),
-                      ],*/
-                    ),
-                  ),
-                  const SizedBox(height: 12),*/
-                  
-                  // Horizontal Story Bar
-                  /*SizedBox(
-                    height: 85,
-                    child: ShaderMask(
-                      shaderCallback: (Rect bounds) {
-                        return const LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [Colors.white, Colors.transparent, Colors.transparent, Colors.white],
-                          stops: [0.0, 0.05, 0.95, 1.0], 
-                        ).createShader(bounds);
-                      },
-                      blendMode: BlendMode.dstOut,
-                      /*child: ListView.builder(
-                        physics: const BouncingScrollPhysics(),
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        itemCount: stories.length,
-                        itemBuilder: (context, index) {
-                          final story = stories[index];
-                          return GestureDetector(
-                            onTap: () => openStory(story),
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 12),
-                              child: Column(
-                                children: [
-                                  Container(
-                                    width: 58, height: 58,
-                                    padding: const EdgeInsets.all(2),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
-                                      gradient: story['hasUpdate'] ? const LinearGradient(colors: [Color(0xFFC67C4E), Color(0xFFE8A07A)], begin: Alignment.topLeft, end: Alignment.bottomRight) : null,
-                                      color: story['hasUpdate'] ? null : const Color(0xFFE5E5E5),
-                                    ),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(color: const Color(0xFFF9F2ED), width: 2),
-                                        image: DecorationImage(image: NetworkImage(story['image']), fit: BoxFit.cover),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  SizedBox(
-                                    width: 58,
-                                    child: Text(
-                                      story['name'],
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: story['hasUpdate'] ? const Color(0xFF242424) : const Color(0xFF909090),
-                                        fontSize: 10,
-                                        fontWeight: story['hasUpdate'] ? FontWeight.w600 : FontWeight.normal,
-                                        fontFamily: 'Urbanist',
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),*/
-                    ),
-                  ),
-                  const SizedBox(height: 12),*/
-
+                 
                   // Filter Pills (Now only shows 'Events')
                   SizedBox(
                     height: 32,
@@ -266,9 +148,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
                   
-                  // ==========================================
+                  
                   // NEW: Real-time Firebase Feed with Filtering
-                  // ==========================================
+                  
                   StreamBuilder<QuerySnapshot>(
                     stream: FirebaseFirestore.instance.collection('announcements').snapshots(),
                     builder: (context, snapshot) {
@@ -449,44 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ],
                                   ),
                                 ),
-                                // Actions
-                                /*Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFF6EBE4)))),
-                                  /*child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          GestureDetector(
-                                            onTap: () => toggleLike(postId),
-                                            child: Row(
-                                              children: [
-                                                Icon(isLiked ? Icons.favorite : Icons.favorite_border, size: 18, color: isLiked ? const Color(0xFFE84057) : const Color(0xFF909090)),
-                                                const SizedBox(width: 6),
-                                                Text("${isLiked ? likes + 1 : likes}", style: const TextStyle(color: Color(0xFF909090), fontSize: 12, fontFamily: 'Urbanist')),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          /*Row(
-                                            children: [
-                                              const Icon(Icons.chat_bubble_outline, size: 18, color: Color(0xFF909090)),
-                                              const SizedBox(width: 6),
-                                              Text("$comments", style: const TextStyle(color: Color(0xFF909090), fontSize: 12, fontFamily: 'Urbanist')),
-                                            ],
-                                          ),*/
-                                          const SizedBox(width: 16),
-                                          const Icon(Icons.share_outlined, size: 18, color: Color(0xFF909090)),
-                                        ],
-                                      ),
-                                      GestureDetector(
-                                        onTap: () => toggleSave(postId),
-                                        child: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border, size: 20, color: isSaved ? const Color(0xFFC67C4E) : const Color(0xFF909090)),
-                                      ),
-                                    ],
-                                  ),*/
-                                ),*/
+                              
                               ],
                             ),
                             ),
@@ -573,18 +418,6 @@ class PostDetailScreen extends StatelessWidget {
             // Content
             Text(content, style: const TextStyle(color: Color(0xFF909090), fontSize: 14, height: 1.7, fontFamily: 'Urbanist')),
             const SizedBox(height: 24),
-            // Stats
-            /*Row(
-              children: [
-                const Icon(Icons.favorite_border, size: 18, color: Color(0xFF909090)),
-                const SizedBox(width: 6),
-                Text('$likes', style: const TextStyle(color: Color(0xFF909090), fontSize: 13, fontFamily: 'Urbanist')),
-                const SizedBox(width: 16),
-                const Icon(Icons.chat_bubble_outline, size: 18, color: Color(0xFF909090)),
-                const SizedBox(width: 6),
-                Text('$comments', style: const TextStyle(color: Color(0xFF909090), fontSize: 13, fontFamily: 'Urbanist')),
-              ],
-            ),*/
           ],
         ),
       ),
