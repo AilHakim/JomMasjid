@@ -27,7 +27,7 @@ responsibility. Adjust names, matric numbers, and the split to match your group.
 | No. | Name | Matric No. | Assigned Module / Tasks |
 |-----|------|-----------|--------------------------|
 | 1 | `[Member 1 — Leader]` | `[Matric No.]` | Authentication & Login (`login_screen.dart`), User/Admin routing, GitHub repo & merge management |
-| 2 | `[Member 2]` | `[Matric No.]` | Home Feed & Announcements (`feed.dart`, `admin_announcement.dart`) |
+| 2 | `[Muhammad Ail Hakim bin Othman]` | `[2312457]` | Home Feed & Announcements (`feed.dart`, `admin_announcement.dart`) |
 | 3 | `[Member 3]` | `[Matric No.]` | Islamic Learning module (`learn.dart`) — courses, enrollment |
 | 4 | `[Member 4]` | `[Matric No.]` | Mosque Finder (`mosques.dart`) — Google Places API integration |
 | 5 | `[Member 5]` | `[Matric No.]` | Donation module (`donation_screen.dart`, `admin_donation_screen.dart`) |
@@ -88,96 +88,172 @@ architecture is portable to iOS with minimal change.
 ## 3. Requirement Analysis & Planning
 
 ### 3.1 Technical Feasibility & Back-End Assessment
-The application is technically feasible using free-tier tooling suitable for a
-student project:
+The proposed **JomMasjid** mobile application is technically feasible as a student project by leveraging Flutter together with Firebase's cloud services and external location APIs. The application adopts a Backend-as-a-Service (BaaS) architecture, reducing the need for server-side infrastructure while providing scalable authentication and cloud data storage.
 
-- **Back End as a Service:** Firebase is used for **Authentication** (email/password
-  with role-based routing) and **Cloud Firestore** for all CRUD operations.
-- **CRUD data storage (Cloud Firestore collections):**
+### Technologies Used
 
-  | Collection | Create | Read | Update | Delete |
-  |------------|--------|------|--------|--------|
-  | `users` | Register user + role | Load profile & role on login | Edit profile | Remove account |
-  | `announcements` | Admin posts | Feed listing | Admin edits | Admin deletes |
-  | `courses` | Seed catalogue | Learn listing & detail | Update lessons | Remove course |
-  | `enrollments` | User enrols | Show enrolled courses | — | Unenroll |
-  | `donationCampaigns` | Admin creates | Donation listing | Admin edits target/status | Admin closes |
-  | `donations` | User contributes | Campaign progress | — | — |
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| Front End | Flutter (Dart) | Cross-platform mobile application development |
+| Authentication | Firebase Authentication | Email and password authentication |
+| Database | Cloud Firestore | Cloud NoSQL database for application data |
+| Maps & Location | OpenStreetMap Overpass API | Retrieve nearby mosques based on user location |
+| Mosque Details | Google Places API (New) | Retrieve detailed mosque information |
 
-- **External API:** Google **Places API (New)** — a `POST` to
-  `places:searchNearby` returns mosque data (rating, review count, address,
-  photos) filtered by the `mosque` place type within a geographic radius.
+### Cloud Firestore Collections (CRUD)
 
-### 3.2 Platform Compatibility
-The app targets Android smartphones and adapts to varying screen sizes using
-Flutter's responsive widgets (`Expanded`, `Flexible`, `MediaQuery`) and
-`SafeArea` for notch/status-bar handling. The layout scales gracefully to larger
-screens and is portable to wearables/iOS with the same widget tree.
+| Collection | Create | Read | Update | Delete |
+|------------|--------|------|--------|--------|
+| `announcements` | Admin creates announcements | Display announcement feed | Admin edits announcements | Admin deletes announcements |
+| `donationCampaigns` | Admin creates donation campaigns | Display campaign list | Admin updates campaign information | Admin deletes campaigns |
+| `donations` | User submits donation | Display donation records and campaign progress | Update campaign total after donation | — |
+| `courses` | Admin seeds learning content | Display course catalogue | Update course information | Remove course |
 
-### 3.3 Logical Design
+### Authentication
 
-**Screen Navigation Flow**
+Firebase Authentication is used to securely authenticate users using their email address and password. Upon successful authentication, the application navigates users to either the **User** interface or the **Admin** interface based on the login mode selected on the login screen.
+
+### Mosque Information Retrieval
+
+The mosque module uses a hybrid API approach:
+
+- **OpenStreetMap Overpass API** retrieves nearby mosques based on the user's GPS location.
+- **Google Places API (New)** retrieves detailed information such as:
+  - Ratings
+  - Number of reviews
+  - Address
+  - Opening hours
+  - Contact number
+  - Website
+  - Photos
+
+---
+## 3.2 Platform Compatibility
+
+The application is developed using **Flutter**, allowing deployment on Android devices while maintaining portability to other platforms such as iOS with minimal modification.
+
+Responsive user interfaces are implemented using Flutter widgets including:
+
+- `Expanded`
+- `Flexible`
+- `MediaQuery`
+- `SafeArea`
+
+These widgets ensure the application adapts well to different screen sizes, resolutions, and devices.
+
+---
+## 3.3 Logical Design
+
+### Screen Navigation Flow
 
 ```mermaid
 flowchart TD
-    A[App Launch] --> B[Login Screen]
-    B -->|User login| C[User MasterScreen — Bottom Nav]
-    B -->|Admin login| D[Admin MasterScreen — Bottom Nav]
 
-    C --> E[Feed]
-    C --> F[Mosques]
-    C --> G[Prayer]
-    C --> H[Events]
-    C --> I[Learn]
-    C --> J[Donations]
+A[Application Launch]
+A --> B[Login Screen]
 
-    I --> I2[Course Detail — Lessons + Enrol]
-    F --> F2[Mosque Detail]
+B --> C{Login Mode}
 
-    D --> K[Post Announcement]
-    D --> L[Create Donation Campaign]
-    D --> M[Manage Feed]
+C -->|User| D[User Master Screen]
+C -->|Admin| E[Admin Master Screen]
+
+D --> F[Feed]
+D --> G[Mosques]
+D --> H[Learn]
+D --> I[Donations]
+
+G --> G1[Mosque Details]
+H --> H1[Course Details]
+
+E --> J[Manage Announcements]
+E --> K[Manage Donation Campaigns]
 ```
 
-**Sequence Diagram — Authentication & Role Routing**
+---
+
+### Sequence Diagram — User Authentication
 
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant App as JomMasjid App
-    participant Auth as Firebase Auth
-    participant DB as Cloud Firestore
 
-    U->>App: Enter email & password
-    App->>Auth: signInWithEmailAndPassword()
-    Auth-->>App: UserCredential / AuthError
-    App->>DB: Read users/{uid} role
-    DB-->>App: role = "user" | "admin"
-    App-->>U: Route to User or Admin MasterScreen
+participant User
+participant App
+participant Firebase
+
+User->>App: Select User/Admin mode
+User->>App: Enter email & password
+
+App->>Firebase: signInWithEmailAndPassword()
+
+alt Authentication Successful
+    Firebase-->>App: UserCredential
+
+    alt User Mode
+        App-->>User: Open User Master Screen
+    else Admin Mode
+        App-->>User: Open Admin Master Screen
+    end
+
+else Authentication Failed
+    Firebase-->>App: Authentication Error
+    App-->>User: Display Error Message
+end
 ```
 
-**Sequence Diagram — Donation (CRUD example)**
+---
+
+### Sequence Diagram — Donation Process
 
 ```mermaid
 sequenceDiagram
-    participant Admin
-    participant App as JomMasjid App
-    participant DB as Cloud Firestore
-    participant U as User
 
-    Admin->>App: Create campaign (title, target)
-    App->>DB: donationCampaigns.add()  %% Create
-    U->>App: Open Donations tab
-    App->>DB: donationCampaigns.get()  %% Read
-    DB-->>App: Active campaigns
-    U->>App: Contribute RM amount
-    App->>DB: donations.add() + update raised  %% Create + Update
-    DB-->>App: Success
-    App-->>U: Confirmation + updated progress
+participant Admin
+participant App
+participant Firestore
+participant User
+
+Admin->>App: Create Donation Campaign
+App->>Firestore: Create campaign document
+Firestore-->>App: Campaign saved
+
+User->>App: Open Donations Screen
+App->>Firestore: Retrieve active campaigns
+Firestore-->>App: Campaign list
+
+User->>App: Submit donation
+App->>Firestore: Create donation record
+App->>Firestore: Update campaign total
+
+Firestore-->>App: Update successful
+App-->>User: Display updated campaign progress
+```
+
+---
+
+### System Architecture
+
+```mermaid
+flowchart LR
+
+User((User))
+Admin((Admin))
+
+User --> Flutter
+Admin --> Flutter
+
+Flutter --> FirebaseAuth[Firebase Authentication]
+Flutter --> Firestore[(Cloud Firestore)]
+
+Flutter --> OSM[OpenStreetMap Overpass API]
+Flutter --> GooglePlaces[Google Places API]
+
+FirebaseAuth --> Flutter
+Firestore --> Flutter
+OSM --> Flutter
+GooglePlaces --> Flutter
 ```
 
 ### 3.4 Project Planning — Gantt Chart
-
 
 ```mermaid
 gantt
