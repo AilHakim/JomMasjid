@@ -32,8 +32,6 @@ responsibility. Adjust names, matric numbers, and the split to match your group.
 | 4 | `[Member 4]` | `[Matric No.]` | Mosque Finder (`mosques.dart`) — Google Places API integration |
 | 5 | `[Member 5]` | `[Matric No.]` | Donation module (`donation_screen.dart`, `admin_donation_screen.dart`) |
 
-> If your group has fewer members, merge modules evenly (e.g. Feed + Auth) so the
-> workload stays balanced, as required by the project instructions.
 
 ---
 
@@ -285,7 +283,6 @@ testable and independently maintainable.
 | `google_fonts` | Sora & Urbanist typography |
 | `http` | Google Places API (New) requests |
 
-> Confirm the exact versions against your `pubspec.yaml` before submission.
 
 **Error checking & input validation:**
 - Login form validates email format and non-empty password before submission.
