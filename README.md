@@ -13,7 +13,7 @@
 
 | Field | Details |
 |-------|---------|
-| **Group Name** | `[Your Group Name]` |
+| **Group Name** | `Fah` |
 | **Repository** | `[Public GitHub Repository URL]` |
 | **Platform** | Android (Flutter) |
 | **Back End as a Service** | Firebase (Authentication + Cloud Firestore) |
