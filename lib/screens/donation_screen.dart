@@ -13,7 +13,7 @@ class CampaignTransaction {
 }
 
 class Campaign {
-  final String id; // CHANGED to String for Firebase IDs
+  final String id; 
   final String mosque;
   final String title;
   final String description;
@@ -68,14 +68,14 @@ class _DonationScreenState extends State<DonationScreen> {
           ],
         ),
         actions: [
-          // 1. Your existing eye icon
+          // eye icon
           IconButton(
             icon: Icon(showAmounts ? Icons.visibility : Icons.visibility_off, color: const Color(0xFF242424)),
             onPressed: () => setState(() => showAmounts = !showAmounts),
           ),
         ],
       ),
-      // NEW: StreamBuilder listens to Firestore in real-time
+      //StreamBuilder listens Firestore live
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('donations').snapshots(),
         builder: (context, snapshot) {
@@ -102,7 +102,7 @@ class _DonationScreenState extends State<DonationScreen> {
           for (var doc in snapshot.data!.docs) {
             var data = doc.data() as Map<String, dynamic>;
             
-            // Safe parsing to handle missing fields gracefully
+            // Safe parsing to handle missing fields 
             double raised = (data['raised'] ?? 0).toDouble();
             int donors = (data['donors'] ?? 0).toInt();
             
@@ -125,12 +125,13 @@ class _DonationScreenState extends State<DonationScreen> {
             ));
           }
 
-          // 5. Build the UI with the live data
+          // 5. Build the UI with live data
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
               // Summary Cards
               Row(
+                //total raised
                 children: [
                   Expanded(
                     child: Container(
@@ -152,6 +153,7 @@ class _DonationScreenState extends State<DonationScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
+                  //total donors
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.all(16),
@@ -178,7 +180,7 @@ class _DonationScreenState extends State<DonationScreen> {
               const Text("Active Campaigns", style: TextStyle(color: Color(0xFF242424), fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
 
-              // Dynamic Campaign List
+              // List Campaign
               ...liveCampaigns.map((campaign) => GestureDetector(
                 onTap: () => setState(() => selectedCampaign = campaign),
                 child: Container(
@@ -216,6 +218,7 @@ class _DonationScreenState extends State<DonationScreen> {
                           ),
                         ],
                       ),
+                      //detail campaign text
                       Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -279,7 +282,6 @@ class _DonationScreenState extends State<DonationScreen> {
 }
 
 // --- DETAIL SCREEN WIDGET ---
-// (Your existing CampaignDetail class stays exactly the same!)
 class CampaignDetail extends StatefulWidget {
   final Campaign campaign;
   final VoidCallback onBack;
@@ -312,12 +314,12 @@ class _CampaignDetailState extends State<CampaignDetail> {
               'donors': FieldValue.increment(1), 
             });
 
-        // Show the success UI
+        // display success text
         setState(() {
           donated = true;
         });
       } catch (e) {
-        // Always good to handle potential errors
+        // network error
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Connection failed. Please try again.")),
@@ -333,6 +335,7 @@ class _CampaignDetailState extends State<CampaignDetail> {
       backgroundColor: const Color(0xFFF9F2ED),
       body: Column(
         children: [
+          //image, text and back button
           Stack(
             children: [
               Image.network(widget.campaign.image, height: 250, width: double.infinity, fit: BoxFit.cover),
