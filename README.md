@@ -182,26 +182,36 @@ sequenceDiagram
 
 ```mermaid
 gantt
-    title JomMasjid Development Timeline
+    title JomMasjid Development Timeline (Semester Project)
     dateFormat  YYYY-MM-DD
     axisFormat  %d %b
 
     section Initiation
-    Ideation & proposal            :done,   a1, 2026-07-01, 3d
+    Project ideation & proposal          :done, a1, 2026-03-16, 1w
+    Problem definition & objectives       :done, a2, 2026-03-23, 1w
+
     section Requirement Analysis
-    Feasibility & data modelling   :active, a2, 2026-07-04, 3d
-    Navigation & sequence design   :        a3, 2026-07-07, 3d
+    Feasibility & back-end assessment     :done, b1, 2026-03-30, 1w
+    Firestore data modelling              :done, b2, 2026-04-06, 1w
+    Navigation & sequence design          :done, b3, 2026-04-06, 1w
+
     section Design
-    UI/UX & design system          :        a4, 2026-07-10, 4d
+    UI/UX wireframes                      :done, c1, 2026-04-13, 1w
+    Design system (colours & fonts)       :done, c2, 2026-04-20, 1w
+
     section Development
-    Auth + Firebase setup          :        a5, 2026-07-14, 3d
-    Feed & announcements           :        a6, 2026-07-14, 4d
-    Learn & Mosque finder          :        a7, 2026-07-16, 4d
-    Donations & admin tools        :        a8, 2026-07-18, 4d
+    Firebase setup & Authentication       :done, d1, 2026-04-27, 2w
+    Home Feed & Announcements             :done, d2, 2026-05-04, 2w
+    Islamic Learning module               :done, d3, 2026-05-11, 2w
+    Mosque Finder (Places API)            :done, d4, 2026-05-18, 2w
+    Donations & Admin tools               :done, d5, 2026-05-25, 2w
+    Firestore CRUD integration            :done, d6, 2026-06-08, 1w
+
     section Testing & Delivery
-    Integration & validation       :        a9, 2026-07-22, 3d
-    Presentation prep              :        a10, 2026-07-25, 2d
-    Group Presentation             :milestone, m1, 2026-07-27, 0d
+    Integration & input validation        :done, e1, 2026-06-15, 1w
+    Bug fixing & UI polish                 :done, e2, 2026-06-22, 1w
+    Documentation & README                 :done, e3, 2026-06-29, 4d
+    Group Presentation                     :milestone, m1, 2026-07-02, 0d
 ```
 
 ---
