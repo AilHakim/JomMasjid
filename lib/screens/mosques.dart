@@ -10,8 +10,8 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
 
-// Color palette (mirrors the hex values used in the original Tailwind code)
-
+// Color palette 
+// Stores all colours used throughout the application.
 class AppColors {
   static const background = Color(0xFFF9F2ED);
   static const accent = Color(0xFFC67C4E);
@@ -35,6 +35,7 @@ TextStyle urbanist({double size = 13, FontWeight weight = FontWeight.w400, Color
 
 
 // Models
+// Every mosque returned from OpenStreetMap will be converted into one Mosque object.
 class Mosque {
   final int id;
   final String name;
@@ -81,7 +82,22 @@ class Mosque {
 }
 
 // Location service — wraps the geolocator package
+// 1. Getting user's GPS location
+// 2. Calculating distances
+// 3. Listening for location updates
+// 4. Fetching nearby mosques from OpenStreetMap
 class LocationService {
+  // Flow:
+//
+// Check if GPS is enabled
+// ↓
+// Check location permission
+// ↓
+// Request permission if needed
+// ↓
+// Obtain GPS coordinates
+// ↓
+// Return Position object
   static Future<Position> determinePosition() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -114,6 +130,8 @@ class LocationService {
     }
   }
 
+// Calculates the straight-line distance between
+// two GPS coordinates.
   static double distanceBetween(
     double startLat,
     double startLng,
@@ -137,6 +155,21 @@ class LocationService {
     'https://lz4.overpass-api.de/api/interpreter',
   ];
 
+// Fetches nearby mosques from OpenStreetMap.
+//
+// Flow:
+//
+// User location
+// ↓
+// Build Overpass query
+// ↓
+// Send POST request
+// ↓
+// Receive JSON
+// ↓
+// Convert JSON into Mosque objects
+// ↓
+// Return List<Mosque>
   static Future<List<Mosque>> fetchNearbyMosques(
     double lat,
     double lng, {
@@ -365,6 +398,21 @@ class GooglePlacesService {
 
 
 // Main screen
+// Displays all nearby mosques.
+//
+// Flow:
+//
+// Screen Opens
+// ↓
+// Get GPS
+// ↓
+// Fetch nearby mosques
+// ↓
+// Calculate distances
+// ↓
+// Sort nearest first
+// ↓
+// Display mosque cards
 class MosqueScreen extends StatefulWidget {
   const MosqueScreen({super.key});
 
@@ -405,7 +453,12 @@ class _MosqueScreenState extends State<MosqueScreen> {
     _searchController.dispose();
     super.dispose();
   }
-
+//loadLocationAndSort
+// Step 1 : Get user's GPS
+// Step 2 : Fetch nearby mosques
+// Step 3 : Calculate distance
+// Step 4 : Sort nearest first
+// Step 5 : Update UI
   Future<void> _loadLocationAndSort() async {
     setState(() {
       _isLoadingLocation = true;
@@ -779,6 +832,7 @@ class MosqueCard extends StatelessWidget {
 }
 
 // Detail screen
+// Displays detailed information fetche from Google API about the selected mosque 
 class MosqueDetailScreen extends StatefulWidget {
   final Mosque mosque;
   const MosqueDetailScreen({super.key, required this.mosque});
@@ -799,7 +853,8 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
     super.initState();
     _enrichFromGoogle();
   }
-
+// Retrieves additional information from
+// Google Places and updates the UI.
   Future<void> _enrichFromGoogle() async {
     try {
       await GooglePlacesService.enrichMosque(widget.mosque);
@@ -819,7 +874,8 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
     _pageController.dispose();
     super.dispose();
   }
-
+// Opens Google Maps (or another map app)
+// and starts navigation to the mosque.
   Future<void> _openDirections() async {
     final mosque = widget.mosque;
     final coords = '${mosque.latitude},${mosque.longitude}';
@@ -852,7 +908,8 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
     }
     return 'https://$trimmed';
   }
-
+// Opens the mosque's website in
+// the device's default web browser.
   Future<void> _launchWebsite(String raw) async {
     if (raw == 'N/A') return;
     final url = _normaliseUrl(raw);
@@ -868,7 +925,8 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
       }
     }
   }
-
+// Opens the phone dialer with the mosque's
+// phone number already filled in.
   Future<void> _launchPhone(String phone) async {
     if (phone == 'N/A') return;
     // Strip spaces and dashes for the tel: URI, keep + for international format.
